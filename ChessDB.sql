@@ -3,8 +3,7 @@ CREATE DATABASE chess;
 CREATE TABLE chessman(
     id serial primary key,
     class varchar(20) check (class in ('king', 'queen', 'rook', 'bishop', 'knight', 'pawn')) NOT NULL,
-    color varchar(20) check (color in ('white', 'black')) NOT NULL,
-    UNIQUE (class, color)
+    color varchar(20) check (color in ('white', 'black')) NOT NULL
 );
 
 CREATE TABLE cell(
