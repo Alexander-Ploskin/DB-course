@@ -13,6 +13,7 @@ CREATE TABLE Chessboard(
     UNIQUE (x, y)
 );
 
+--Inserts chessmen with specified class and both color to the table
 CREATE OR REPLACE PROCEDURE insert_chessmen (chessman_class char(20), count int)
 LANGUAGE plpgsql
 as $$
@@ -24,6 +25,7 @@ as $$
     end
 $$;
 
+--Initializes set of chess figures
 CREATE OR REPLACE PROCEDURE init_figures ()
 LANGUAGE plpgsql
 as $$
@@ -37,6 +39,7 @@ as $$
     end
 $$;
 
+--Places all chessmen of specified type to all positions on the line with specified step
 CREATE OR REPLACE PROCEDURE place_chessmen(required_class char(20), white_line_number int, initial_pos int, step int)
 LANGUAGE plpgsql
 as $$
@@ -61,6 +64,7 @@ as $$
     end
 $$;
 
+--Initializes chessboard
 CREATE OR REPLACE PROCEDURE init_board()
 LANGUAGE plpgsql
 as $$
@@ -74,6 +78,7 @@ as $$
     end
 $$;
 
+--Initializes new chess game
 CREATE OR REPLACE PROCEDURE init_game ()
 LANGUAGE plpgsql
 as $$
