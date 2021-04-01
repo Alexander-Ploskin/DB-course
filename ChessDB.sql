@@ -149,4 +149,64 @@ WITH Distance AS(
     WITH wkCoords AS (SELECT x, y FROM Chessman LEFT JOIN Chessboard on id = chessman_id WHERE class = 'king' and color = 'white')
 	SELECT id, abs(Chessboard.y - wkCoords.y) + abs(ascii(Chessboard.x) - ascii(wkCoords.x)) AS value
 	FROM Chessman, Chessboard, wkCoords WHERE id = chessman_id AND (class <> 'king' or color <> 'white'))
-SELECT id FROM Distance WHERE Distance.value = (SELECT MIN(Distance.value) FROM Distance)
+SELECT id FROM Distance WHERE Distance.value = (SELECT MIN(Distance.value) FROM Distance);
+
+--Procedure which moves chessman with the specified id into new position
+CREATE OR REPLACE PROCEDURE move_figure(prevX char, prevY int, newX char, newY int)
+LANGUAGE plpgsql
+AS $$
+DECLARE figureColor char(20);
+DECLARE colorOnNewPosition char(20);
+DECLARE figureId int;
+BEGIN
+   BEGIN
+       SELECT chessman_id INTO figureId FROM Chessboard LEFT JOIN Chessman ON chessman_id = id
+       WHERE x = prevX and y = prevY;
+   END;
+   BEGIN --Receive color of chessman on the new position
+       SELECT color INTO figureColor FROM Chessboard LEFT JOIN Chessman ON chessman_id = id
+       WHERE id = figureId;
+   END;
+   BEGIN --Receive color of moving chessman
+       SELECT color INTO colorOnNewPosition FROM Chessboard LEFT JOIN Chessman ON chessman_id = id
+       WHERE x = newX and y = newY;
+   END;
+   IF figureId IS NOT NULL AND newX BETWEEN 'A' AND 'H' AND newY BETWEEN 1 AND 8 THEN
+       IF colorOnNewPosition = 'black' OR colorOnNewPosition = 'white' THEN
+           IF figureColor != colorOnNewPosition THEN
+			    DELETE FROM Chessboard WHERE chessman_id = figureId;
+			    DELETE FROM Chessboard WHERE x = newX AND y = newY;
+			    INSERT INTO Chessboard VALUES(figureId, newX, newY);
+           END IF;
+	ELSE
+		DELETE FROM Chessboard WHERE chessman_id = figureId;
+		INSERT INTO Chessboard VALUES(figureId, newX, newY);
+	END IF;
+   END IF;
+END
+$$;
+
+--State of the board before any moving
+SELECT chessman_id, x, y, class, color from Chessman left join Chessboard on id = chessman_id;
+DROP TABLE InitialChessboard;
+SELECT * INTO InitialChessboard FROM Chessboard;
+
+SELECT DISTINCT id, color, class, Chessboard.x AS newX, Chessboard.y as newY FROM Chessman, Chessboard, InitialChessboard WHERE
+(id = Chessboard.chessman_id AND id = InitialChessboard.chessman_id AND (Chessboard.x <> InitialChessboard.x OR Chessboard.y <> InitialChessboard.y))
+OR (EXISTS(SELECT * FROM ChessBoard where id = Chessboard.chessman_id) AND NOT EXISTS(SELECT * FROM InitialChessboard where id = InitialChessboard.chessman_id));
+
+--Examples of usage of the moving function:
+--1.Invalid call, specified previous position doesn't exist
+call move_figure('A', 20, 'B', 3);
+
+--2.Invalid call, specified new position doesn't exist
+call move_figure('A', 1, 'B', 10);
+
+--3.Move figure into a free position
+call move_figure('A', 1, 'B', 4);
+
+--4.Move figure into a position occupied by a figure of the same color
+call move_figure('B', 4, 'A', 2);
+
+--5.Move figure into a position occupied by a figure of the opposite color
+call move_figure('A', 2, 'A', 8);
