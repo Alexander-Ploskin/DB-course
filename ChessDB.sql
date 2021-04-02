@@ -174,13 +174,11 @@ BEGIN
    IF figureId IS NOT NULL AND newX BETWEEN 'A' AND 'H' AND newY BETWEEN 1 AND 8 THEN
        IF colorOnNewPosition = 'black' OR colorOnNewPosition = 'white' THEN
            IF figureColor != colorOnNewPosition THEN
-			    DELETE FROM Chessboard WHERE chessman_id = figureId;
 			    DELETE FROM Chessboard WHERE x = newX AND y = newY;
-			    INSERT INTO Chessboard VALUES(figureId, newX, newY);
+			    UPDATE Chessboard SET x = newX, y = newY WHERE chessman_id = figureId;
            END IF;
 	ELSE
-		DELETE FROM Chessboard WHERE chessman_id = figureId;
-		INSERT INTO Chessboard VALUES(figureId, newX, newY);
+		UPDATE Chessboard SET x = newX, y = newY WHERE chessman_id = figureId;
 	END IF;
    END IF;
 END
@@ -210,3 +208,54 @@ call move_figure('B', 4, 'A', 2);
 
 --5.Move figure into a position occupied by a figure of the opposite color
 call move_figure('A', 2, 'A', 8);
+
+DROP TABLE MoveLog;
+CREATE TABLE MoveLog(
+    id SERIAL PRIMARY KEY,
+    chessman_id INT NOT NULL,
+    previous_x CHAR CHECK (previous_x BETWEEN 'A' AND 'H'),
+    previous_y INT CHECK (previous_y BETWEEN 1 AND 8),
+    new_x CHAR CHECK (new_x BETWEEN 'A' AND 'H'),
+    new_y INT CHECK (new_y BETWEEN 1 AND 8)
+);
+
+--Trigger function which saves turn data into the MoveLog table
+CREATE OR REPLACE FUNCTION move_trigger() RETURNS trigger AS $move_trigger$
+DECLARE prev_x CHAR;
+DECLARE prev_y INT;
+BEGIN
+    IF NEW IS NULL THEN --Deletion case
+		INSERT INTO MoveLog(chessman_id, previous_x, previous_y, new_x, new_y) VALUES (OLD.chessman_id, OLD.x, OLD.y, null, null);
+		RETURN OLD;
+	ELSE
+	    IF OLD IS NULL THEN --New figure on the board case
+            INSERT INTO MoveLog(chessman_id, previous_x, previous_y, new_x, new_y) VALUES (NEW.chessman_id, null, null, NEW.x, NEW.y);
+        ELSE --Moving figure on the board case
+            prev_x := OLD.x;
+            prev_y := OLD.y;
+		    INSERT INTO MoveLog(chessman_id, previous_x, previous_y, new_x, new_y) VALUES (NEW.chessman_id, prev_x, prev_y, NEW.x, NEW.y);
+        END IF;
+		RETURN NEW;
+	END IF;
+END;
+$move_trigger$ LANGUAGE plpgsql;
+
+--Move trigger initialization
+DROP TRIGGER IF EXISTS move_trigger ON Chessboard;
+CREATE TRIGGER move_trigger AFTER INSERT OR DELETE OR UPDATE ON Chessboard FOR EACH ROW EXECUTE PROCEDURE move_trigger();
+
+TRUNCATE MoveLog;
+
+--Few examples:
+
+--1.New figures on the board case
+call init_game();
+
+--2.Simple moving case
+call move_figure('E', 2, 'E', 4);
+
+--3.Moving with deletion case
+call move_figure('A', 2, 'A', 8);
+
+--Data in the move log
+SELECT * FROM MoveLog;
