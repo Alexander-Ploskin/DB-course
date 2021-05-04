@@ -51,10 +51,16 @@ CREATE TABLE Passengers(
 );
 
 CREATE TABLE Archive(
-    Id CHAR(6) PRIMARY KEY,
+
+    FlightId CHAR(6) NOT NULL,
+    Plane CHAR(10) REFERENCES Planes(Id) NOT NULL,
+    DepartureAirport CHAR(4) REFERENCES Airports(ICAOCode) NOT NULL,
+    ArrivalAirport CHAR(4) REFERENCES Airports(ICAOCode) NOT NULL,
     DepartureDate TIMESTAMP WITH TIME ZONE NOT NULL,
-    TotalTickets INT NOT NULL CHECK (TotalTickets >= 0) NOT NULL,
-    SoldTickets INT NOT NULL CHECK (SoldTickets >= 0 AND SoldTickets <= TotalTickets) NOT NUll
+    FlightTime INTERVAL NOT NULL,
+    TicketCost MONEY NOT NULL,
+    TotalTickets INT NOT NULl CHECK (Archive.TotalTickets >= 0) NOT NULL,
+    SoldTickets INT CHECK (Archive.SoldTickets <= Archive.TotalTickets AND Archive.SoldTickets >= 0) NOT NULL
 );
 
 --Initialization of aircraft producers
@@ -108,6 +114,17 @@ INSERT INTO Customers VALUES ('32 43 413400', 'Casimir', 'Piast', NUll);
 INSERT INTO Flights VALUES ('SU-321', 'RA-7045', 'ULLI', 'EDDM', 'April 13 04:05:06 2021 MSK', '0 4:05:00', 4000, 150, 150);
 INSERT INTO Flights VALUES ('SU-300', 'RA-7046', 'ULLI', 'UUOO', 'April 13 17:00:00 2021 MSK', '0 2:05:00', 2500, 150, 150);
 INSERT INTO Flights VALUES ('SU-911', 'RA-8943', 'UUOO', 'LTFM', 'April 13 23:30:00 2021 MSK', '0 3:24:00', 7000, 100, 100);
+INSERT INTO Flights VALUES ('SU-020', 'RA-6532', 'ULLI', 'LTFM', 'April 13 10:00:00 2021 MSK', '0 4:40:00', 10000, 200, 200);
+
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-321', 'RA-7046', 'ULLI', 'UUOO', 'July 11 10:00:00 2020 MSK', '0 2:15:00', 2000, 150, 80);
+INSERT INTO Archive VALUES ('FA-434', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
+INSERT INTO Archive VALUES ('FA-231', 'RA-7046', 'UUOO', 'ULLI', 'July 10 00:00:00 2020 MSK', '0 2:15:00', 2000, 150, 100);
 
 --Initialization of passengers
 INSERT INTO Passengers VALUES ('SU-321', '12 21 123456');
@@ -157,3 +174,95 @@ Flights LEFT JOIN Passengers on Flights.Id = Passengers.Flight)
 SELECT avg(DepartureDate - HELP.ArrivalTime) AS AverageTransferTime FROM HELP, Flights LEFT JOIN Passengers on Flights.Id = Passengers.Flight
 WHERE DepartureAirport = HELP.ArrivalAirport AND Passengers.Customer = HELP.Customer AND HELP.ArrivalTime < DepartureDate AND current_timestamp - Flights.DepartureDate < '90 0:00:00' GROUP BY DepartureDate - HELP.ArrivalTime;
 
+
+--Trigger function which updates number of free seats on the flight if ticket was bought or returned
+CREATE OR REPLACE FUNCTION sale_trigger() RETURNS trigger AS $sale_trigger$
+DECLARE freeseats INT;
+BEGIN
+    IF NEW IS NULL THEN
+        SELECT Flights.FreeSeats INTO freeseats FROM Flights
+	    WHERE Id = old.Flight;
+
+	    UPDATE flights SET FreeSeats = flights.freeseats + 1
+		    WHERE Id = old.Flight;
+        RETURN OLD;
+    ELSE
+        SELECT Flights.FreeSeats INTO freeseats FROM Flights
+	    WHERE Id = new.Flight;
+
+	    IF freeseats = 0
+	        THEN RAISE EXCEPTION 'All tickets for this flight are already sold';
+	    ELSE UPDATE flights SET FreeSeats = flights.freeseats - 1
+		    WHERE Id = new.Flight;
+	    END IF;
+
+        RETURN NEW;
+    end if;
+
+END;
+$sale_trigger$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS sale_trigger ON Passengers;
+CREATE TRIGGER sale_trigger BEFORE INSERT OR DELETE ON Passengers FOR EACH ROW EXECUTE PROCEDURE sale_trigger();
+
+INSERT INTO Passengers VALUES ('SU-321', '32 43 413400');
+DELETE FROM Passengers WHERE Customer = '32 43 413400';
+
+SELECT * FROM Flights;
+
+CREATE OR REPLACE FUNCTION get_place_by_airport_code(ICAO CHAR(4)) RETURNS CHAR(20)
+AS $$
+    DECLARE result CHAR(20);
+    BEGIN
+        SELECT Name INTO result FROM Airports LEFT JOIN Places ON Airports.Place = Places.Name WHERE Airports.ICAOCode = ICAO;
+        RETURN result;
+    END;
+$$ LANGUAGE plpgsql;
+
+DROP FUNCTION get_routes(departure_date DATE, departure_place CHAR, arrival_place CHAR);
+
+--Returns all possible routes to go from A to B with no more than two transfer
+CREATE OR REPLACE FUNCTION get_routes(departure_date DATE, departure_place CHAR(20), arrival_place CHAR(20))
+RETURNS TABLE (
+    FirstId CHAR(6),
+    SecondId CHAR(6),
+    RouteTime1 INTERVAL,
+    RouteTime2 INTERVAL
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT Flights.Id, NULLIF(1,1), Flights.FlightTime, NULLIF(1,1)
+    FROM Flights
+    WHERE departure_date = date(Flights.DepartureDate)
+    AND get_place_by_airport_code(Flights.DepartureAirport) = departure_place
+    AND get_place_by_airport_code(Flights.ArrivalAirport) = arrival_place; --UNION ALL
+    --WITH FinalFlights AS(SELECT * FROM Flights WHERE get_place_by_airport_code(ArrivalAirport) = arrival_place
+    --AND get_place_by_airport_code(DepartureAirport) <> departure_place)--Flights which arrives into the arrival airports except
+
+END;
+$$ LANGUAGE plpgsql;
+
+select * FROM get_routes('April 13, 2021', 'Saint-Petersburg', 'Istanbul');
+
+WITH FinalFlights AS(SELECT * FROM Flights WHERE get_place_by_airport_code(ArrivalAirport) = 'Istanbul'
+    AND get_place_by_airport_code(DepartureAirport) <> 'Saint-Petersburg')--Flights which arrives into the arrival airports except flights from departure airport
+    SELECT Flights.Id, FinalFlights.Id, Flights.FlightTime, FinalFlights.FlightTime
+    FROM FinalFlights FULL OUTER JOIN Flights ON Flights.DepartureAirport = FinalFlights.DepartureAirport;
+
+--Calculates discount for every agency customer based on the formula
+CREATE OR REPLACE VIEW Discount
+AS SELECT DISTINCT Passengers.Customer, CASE WHEN A.flights >= 40 THEN 20
+			       					ELSE (A.flights / 10 * 5)
+			       					END
+FROM passengers, (SELECT Customer, (COUNT(*)) AS flights
+		  		  FROM passengers
+		  		  GROUP BY Customer) AS A
+WHERE passengers.Customer = A.Customer
+
+SELECT * FROM discount;
+
+CREATE OR REPLACE VIEW AverageOccupancy
+AS SELECT avg(SoldTickets / Archive.TotalTickets) FROM Archive GROUP BY SoldTickets / Archive.TotalTickets;
+
+SELECT * FROM AverageOccupancy;
