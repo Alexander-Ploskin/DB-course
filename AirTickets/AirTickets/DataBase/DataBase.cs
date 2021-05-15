@@ -19,23 +19,23 @@ namespace DataBase
             this.connection = connection;
         }
 
-        public static DataBase Connect()
+        public static async Task<DataBase> ConnectAsync()
         {
-             var connection = new NpgsqlConnection($"Server={Server};Port={Port};Database={Database};User Id={UserId};Password={password};");
-            connection.Open();
+            var connection = new NpgsqlConnection($"Server={Server};Port={Port};Database={Database};User Id={UserId};Password={password};");
+            await connection.OpenAsync();
             return new DataBase(connection);
         }
 
-        private DataTable DoRequest(string request)
+        private async Task<DataTable> DoRequestAsync(string request)
         {
             using var command = new NpgsqlCommand(request, connection) { CommandType = CommandType.Text };
-            using var reader = command.ExecuteReader();
+            using var reader = await command.ExecuteReaderAsync();
             var result = new DataTable();
             result.Load(reader);
             return result;
         }
 
-        public DataTable GetSchedule() => DoRequest("select * from schedule order by DepartureDate");
+        public async Task<DataTable> GetScheduleAsync() => await DoRequestAsync("select * from schedule order by DepartureDate");
 
         public void Dispose()
         {

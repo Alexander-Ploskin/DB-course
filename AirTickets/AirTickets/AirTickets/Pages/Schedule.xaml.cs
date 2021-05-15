@@ -22,8 +22,6 @@ namespace AirTickets.Pages
         public Schedule()
         {
             InitializeComponent();
-            var db = DataBase.DataBase.Connect();
-            dg.ItemsSource = db.GetSchedule().DefaultView;
         }
     }
 }
