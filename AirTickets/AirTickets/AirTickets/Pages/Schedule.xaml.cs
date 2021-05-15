@@ -23,7 +23,7 @@ namespace AirTickets.Pages
         {
             InitializeComponent();
             var db = DataBase.DataBase.Connect();
-            dg.ItemsSource = db.GetPlanes().DefaultView;
+            dg.ItemsSource = db.GetSchedule().DefaultView;
         }
     }
 }
