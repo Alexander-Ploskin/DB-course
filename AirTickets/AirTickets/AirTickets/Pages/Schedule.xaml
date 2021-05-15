@@ -15,8 +15,7 @@
             <DataGrid ItemsSource="{Binding Schedule}" IsReadOnly="True"/>
             <TextBlock Text="{Binding Message}"/>
             <Button Content="Get data" Command="{Binding GetDataCommand}"/>
-            <Button Content="Increment" Command="{Binding IncrementCommand}"/>
-            <TextBlock Text="{Binding Counter}"/>
+            <Button Content="Connect" Command="{Binding ConnectCommand}"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -8,31 +8,15 @@ namespace AirTickets.Command
 {
     public abstract class AsyncCommandBase : ICommand
     {
-        public event EventHandler CanExecuteChanged;
-
-        private bool isExecuting;
-
-        public bool IsExecuting
+        public event EventHandler CanExecuteChanged
         {
-            get => isExecuting;
-            set
-            {
-                isExecuting = value;
-                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-            }
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
         }
 
-        public bool CanExecute(object parameter)
-        {
-            return !IsExecuting;
-        }
+        public abstract bool CanExecute(object parameter);
 
-        public async void Execute(object parameter)
-        {
-            IsExecuting = true;
-            await ExecuteAsync(parameter);
-            IsExecuting = false;
-        }
+        public abstract void Execute(object parameter);
 
         protected abstract Task ExecuteAsync(object parameter);
     }
