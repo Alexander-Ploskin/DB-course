@@ -20,8 +20,8 @@
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Archive">
             <mui:LinkGroup.Links>
-                <mui:Link DisplayName="Archive" Source="/Pages/GeneralGraph.xaml" />
-                <mui:Link DisplayName="Statistics" Source="/Pages/DynamicGraph.xaml" />
+                <mui:Link DisplayName="Archive" Source="/Pages/Archive.xaml" />
+                <mui:Link DisplayName="Statistics" Source="/Pages/Archive.xaml" />
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
     </mui:ModernWindow.MenuLinkGroups>

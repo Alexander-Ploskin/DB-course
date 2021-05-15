@@ -10,17 +10,20 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DataBase;
 
 namespace AirTickets.Pages
 {
     /// <summary>
     /// Interaction logic for Departure.xaml
     /// </summary>
-    public partial class Departure : UserControl
+    public partial class Schedule : UserControl
     {
-        public Departure()
+        public Schedule()
         {
             InitializeComponent();
+            var db = DataBase.DataBase.Connect();
+            dg.ItemsSource = db.GetPlanes().DefaultView;
         }
     }
 }
