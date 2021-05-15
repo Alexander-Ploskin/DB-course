@@ -37,7 +37,7 @@ namespace AirTickets.ViewModel
             Message = "not connected";
             dataBase = await DataBase.DataBase.ConnectAsync();
             Message = "connected";
-            connected = true;
+            Connected = true;
         }
 
         private bool CanConnectCommandExecute(object parameter)
@@ -49,7 +49,6 @@ namespace AirTickets.ViewModel
 
         private async Task OnGetDataCommandExecuted(object parameter)
         {
-            await Task.Delay(3000);
             var schedule = await dataBase.GetScheduleAsync();
             Schedule = schedule.DefaultView;
             Message = "ok";
@@ -57,11 +56,12 @@ namespace AirTickets.ViewModel
 
         private bool CanGetDataCommandExecute(object parameter)
         {
-            return Connected;
+            return dataBase != null && Connected;
         }
 
         public void Dispose()
         {
+            dataBase.Dispose();
             Schedule.Dispose();
         }
     }

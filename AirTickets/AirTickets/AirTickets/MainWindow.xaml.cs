@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DataBase;
 
 namespace AirTickets
 {
@@ -20,9 +21,12 @@ namespace AirTickets
     /// </summary>
     public partial class MainWindow
     {
+        private DataBase.DataBase dataBase;
+
         public MainWindow()
         {
             InitializeComponent();
         }
+
     }
 }

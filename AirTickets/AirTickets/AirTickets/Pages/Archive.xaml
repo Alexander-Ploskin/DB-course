@@ -4,9 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AirTickets.Pages"
+             xmlns:vm="clr-namespace:AirTickets.ViewModel"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <vm:ArchiveViewModel/>
+    </UserControl.DataContext>
     <Grid>
-            <TextBlock Text="Archive"/>
+        <StackPanel>
+            <DataGrid ItemsSource="{Binding Archive}" IsReadOnly="True"/>
+            <TextBlock Text="{Binding StatusMessage}"/>
+            <Button Content="Refresh" Command="{Binding GetDataCommand}"/>
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -37,6 +37,8 @@ namespace DataBase
 
         public async Task<DataTable> GetScheduleAsync() => await DoRequestAsync("select * from schedule order by DepartureDate");
 
+        public async Task<DataTable> GetArchiveAsync() => await DoRequestAsync("select * from archive order by DepartureDate");
+
         public void Dispose()
         {
             connection.Dispose();
