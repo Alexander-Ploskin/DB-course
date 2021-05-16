@@ -5,6 +5,7 @@ using System.Data;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using DataBase;
 
 namespace AirTickets.ViewModel
 {
@@ -15,11 +16,7 @@ namespace AirTickets.ViewModel
             GetDataCommand = new RelayAsyncCommand(OnGetDataCommandExecuted, (ex) => StatusMessage = ex.Message, CanGetDataCommandExecute);
         }
 
-        private bool connected;
-        private bool Connected { get => connected; set => Set(ref connected, value); }
-
-        public DataBase.DataBase DataBase { get; set; } 
-
+        private DataBaseWrapper dataBase;
         private DataView archive;
 
         public DataView Archive { get => archive; set => Set(ref archive, value); }
@@ -32,19 +29,20 @@ namespace AirTickets.ViewModel
 
         private async Task OnGetDataCommandExecuted(object parameter)
         {
-            var archive = await DataBase.GetArchiveAsync();
+            var dataBase = await DataBaseWrapper.ConnectAsync();
+            var archive = await dataBase.GetArchiveAsync();
             Archive = archive.DefaultView;
             StatusMessage = "ok";
         }
 
         private bool CanGetDataCommandExecute(object parameter)
         {
-            return DataBase != null && Connected;
+            return true;
         }
 
         public void Dispose()
         {
-            DataBase.Dispose();
+            dataBase.Dispose();
             Archive.Dispose();
         }
     }

@@ -21,8 +21,6 @@ namespace AirTickets
     /// </summary>
     public partial class MainWindow
     {
-        private DataBase.DataBase dataBase;
-
         public MainWindow()
         {
             InitializeComponent();

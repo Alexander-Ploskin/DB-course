@@ -20,7 +20,7 @@ namespace AirTickets.ViewModel
         private bool connected;
         private bool Connected { get => connected; set => Set(ref connected, value); }
 
-        private DataBase.DataBase dataBase;
+        private DataBase.DataBaseWrapper dataBase;
 
         private DataView schedule;
 
@@ -35,7 +35,7 @@ namespace AirTickets.ViewModel
         private async Task OnConnectCommandExecuted(object parameter)
         {
             Message = "not connected";
-            dataBase = await DataBase.DataBase.ConnectAsync();
+            dataBase = await DataBase.DataBaseWrapper.ConnectAsync();
             Message = "connected";
             Connected = true;
         }
