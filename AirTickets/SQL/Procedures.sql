@@ -26,32 +26,6 @@ RETURN QUERY (
 END;
 $$;
 
---Gets list of routes from A to B from the cheapest to the most expensive
-CREATE OR REPLACE FUNCTION GetCheapFlights(
-	StartPoint CHAR(6), 
-	FinalPoint CHAR(6),
-	FlightDate DATE,
-	MaxTransferTime INTERVAL
-) RETURNS TABLE(
-	FirstFlight CHAR(6),
-	SecondFlight CHAR(6),
-	FlightCost MONEY
-)
-LANGUAGE plpgsql AS
-$$
-BEGIN
-	RETURN QUERY
-		(SELECT A.ID AS FirstFlight, B.ID AS Secondflight, (A.TicketCost + B.TicketCost) AS FlightCost
-		FROM schedule A JOIN schedule B 
-		ON (A.ArrivalAirport = B.DepartureAirport) and (A.DepartureAirport = StartPoint) and (B.ArrivalAirport = FinalPoint)
-		 WHERE CheckTransfer(A.ID, B.ID, MaxTransferTime)
-		ORDER BY FlightCost ASC)
-		UNION
-		(SELECT ID as FirstFlight, null as SecondFlight, schedule.TicketCost FROM schedule
-		 WHERE DepartureAirport = StartPoint and ArrivalAirport = FinalPoint);
-END;
-$$;
-
 --Gets routes from A to B with one or two transitions in journey time order
 CREATE OR REPLACE FUNCTION GetFastFlights(
 	StartPoint CHAR(6), 
