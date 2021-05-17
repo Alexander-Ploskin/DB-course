@@ -11,6 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using DataBase;
+using AirTickets.ViewModel;
 
 namespace AirTickets.Pages
 {
@@ -22,6 +23,8 @@ namespace AirTickets.Pages
         public Schedule()
         {
             InitializeComponent();
+            var vm = (ScheduleViewModel)DataContext;
+            schedule.SelectionChanged += vm.FlightSelected;
         }
     }
 }

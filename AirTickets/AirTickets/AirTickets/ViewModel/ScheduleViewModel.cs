@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Linq;
 using AirTickets.Command;
+using System.Windows.Controls;
 
 namespace AirTickets.ViewModel
 {
@@ -18,6 +19,13 @@ namespace AirTickets.ViewModel
             ConnectCommand = new RelayAsyncCommand(OnConnectCommandExecuted, (ex) => Message = ex.Message, CanConnectCommandExecute);
             MoveRightCommand = new RelayCommand(OnMoveRightCommandExecuted, CanMoveRightCommandExecute);
             MoveLeftCommand = new RelayCommand(OnMoveLeftCommandExecuted, CanMoveLeftCommandExecute);
+        }
+
+        public void FlightSelected (object sender, SelectionChangedEventArgs args)
+        {
+            var row = (DataRowView)args.AddedItems[0];
+            Message = row.Row.ItemArray.Length.ToString();
+            return;
         }
 
         private int pageNumber;
@@ -36,7 +44,8 @@ namespace AirTickets.ViewModel
             }
         }
 
-        private bool CanMoveRightCommandExecute(object p) => true;
+        private bool CanMoveRightCommandExecute(object p)
+            => VisibleSchedule != null && VisibleSchedule.Table != null && VisibleSchedule.Table.Rows.Count > 0 && pageNumber < 15;
 
         public ICommand MoveLeftCommand { get; }
 
@@ -66,6 +75,10 @@ namespace AirTickets.ViewModel
         private DataView schedule;
 
         public DataView VisibleSchedule { get => schedule; set => Set(ref schedule, value); }
+
+        private DataView selectedFlightData;
+
+        public DataView SelectedFlightData { get => selectedFlightData; set => Set(ref selectedFlightData, value); }
 
         private string message = "";
 
