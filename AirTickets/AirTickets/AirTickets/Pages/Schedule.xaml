@@ -12,8 +12,12 @@
     </UserControl.DataContext>
     <Grid>
         <StackPanel>
-            <DataGrid ItemsSource="{Binding Schedule}" IsReadOnly="True"/>
+            <DataGrid ItemsSource="{Binding VisibleSchedule}" IsReadOnly="True"/>
             <TextBlock Text="{Binding Message}"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="&lt;" Command="{Binding MoveLeftCommand}"/>
+                <Button Content=">" Command="{Binding MoveRightCommand}"/>
+            </StackPanel>
             <Button Content="Get data" Command="{Binding GetDataCommand}"/>
             <Button Content="Connect" Command="{Binding ConnectCommand}"/>
         </StackPanel>
