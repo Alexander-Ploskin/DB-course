@@ -19,12 +19,57 @@ namespace AirTickets.ViewModel
             ConnectCommand = new RelayAsyncCommand(OnConnectCommandExecuted, (ex) => Message = ex.Message, CanConnectCommandExecute);
             MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => Message = ex.Message, CanMoveRightCommandExecute);
             MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => Message = ex.Message, CanMoveLeftCommandExecute);
+            BuyTicketCommand = new RelayAsyncCommand(OnBuyTicketCommandExecuted, (ex) => Message = ex.Message, CanBuyTicketCommandExecute);
         }
 
-        public async void FlightSelected (object sender, SelectionChangedEventArgs args)
+        public ICommand BuyTicketCommand { get; }
+
+        private async Task OnBuyTicketCommandExecuted(object parameter)
         {
-            var row = (DataRowView)args.AddedItems[0];
-          //  SelectedFlightData = await dataBase.GetFlightInfo(row["Flight"], row["Departure date"], row[""])
+            await dataBase.InsertFlight(selectedFlightNumber, selectedFlightDepartureDate);
+            await dataBase.InsertPassenger(SelectedName, SelectedSurname, SelectedPatronymic,
+                SelectedID, selectedFlightNumber, selectedFlightDepartureDate);
+        }
+
+        private bool CanBuyTicketCommandExecute(object parameter)
+        {
+            return !string.IsNullOrEmpty(selectedFlightNumber)
+                && !string.IsNullOrEmpty(selectedFlightDepartureDate)
+                && !string.IsNullOrEmpty(SelectedName)
+                && !string.IsNullOrEmpty(SelectedSurname)
+                && !string.IsNullOrEmpty(SelectedID);
+        }
+
+        private string selectedFlightNumber;
+
+        private string selectedFlightDepartureDate;
+
+        private string selectedName;
+
+        public string SelectedName { get => selectedName; set => Set(ref selectedName, value); }
+
+        private string selectedSurname;
+
+        public string SelectedSurname { get => selectedSurname; set => Set(ref selectedSurname, value); }
+
+        private string selectedPatronymic;
+
+        public string SelectedPatronymic { get => selectedPatronymic; set => Set(ref selectedPatronymic, value); }
+
+        private string selectedID;
+
+        public string SelectedID { get => selectedID; set => Set(ref selectedID, value); }
+
+        private string selectedFlight;
+
+        public string SelectedFlight { get => selectedFlight; set => Set(ref selectedFlight, value); }
+
+        public void FlightSelected (object sender, SelectionChangedEventArgs args)
+        {
+            var dataRow = (DataRowView)args.AddedItems[0];
+            selectedFlightNumber = dataRow.Row.ItemArray[0].ToString();
+            selectedFlightDepartureDate = dataRow.Row.ItemArray[3].ToString();
+            SelectedFlight = selectedFlightNumber;
             return;
         }
 

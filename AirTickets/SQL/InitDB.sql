@@ -45,11 +45,23 @@ CREATE TABLE Schedule(
 
 CREATE TABLE Flights(
 	FlightNumber CHAR(6) REFERENCES Schedule(ID) NOT NULL,
-	TotalTickets INT CHECK (TotalTickets = (Select TotalTickets FROM Schedule WHERE ID = FlightNumber)) NOT NULL,
-	SoldTickets INT CHECK (SoldTickets BETWEEN 0 AND TotalTickets) NOT NULL,
+	SoldTickets INT CHECK (SoldTickets >= 0) NOT NULL,
 	DepartureDate DATE NOT NULL,
 	PRIMARY KEY (FlightNumber, DepartureDate)
 );
+
+--Day of week constraint on the flights and archive tables
+CREATE OR REPLACE FUNCTION CheckThatSoldTicketsLessThanTotal(FlightID CHAR(6), SoldTickets INT)
+RETURNS BOOL
+LANGUAGE plpgsql AS
+$$
+BEGIN
+RETURN ((SELECT SoldTickets FROM Schedule WHERE ID = FlightID) >= SoldTickets);
+END;
+$$;
+
+ALTER TABLE Flights
+ADD CONSTRAINT SoldTickets CHECK(CheckThatSoldTicketsLessThanTotal(FlightNumber, SoldTickets));
 
 --Day of week constraint on the flights and archive tables
 CREATE OR REPLACE FUNCTION CheckDayOfWeek(FlightID CHAR(6), FlightDate DATE)

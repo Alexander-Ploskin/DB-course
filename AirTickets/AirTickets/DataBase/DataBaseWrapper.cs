@@ -35,6 +35,32 @@ namespace DataBase
             return result;
         }
 
+        public async Task InsertFlight(string flightNumber, string departureDate)
+        {
+            await DoRequestAsync($"INSERT INTO Flights VALUES ('{flightNumber}', 0, '{departureDate}');");
+        }
+
+        public async Task<bool> InsertPassenger(string name, string surname, string patronymic, string id, string flightNumber, string departureDate)
+        {
+            if (patronymic == null || patronymic == "")
+            {
+                patronymic = "NULL";
+            }
+
+            await DoRequestAsync($"INSERT INTO Customers VALUES ('{id}', '{name}', '{surname}', '{patronymic}');");
+
+            var splittedDepartureDate = departureDate.Split(".");
+            var day = splittedDepartureDate[0];
+            var month = splittedDepartureDate[1];
+            var year = splittedDepartureDate[2];
+
+            departureDate = $"{year}-{month}-{day}";
+
+            await DoRequestAsync($"INSERT INTO Passengers VALUES ('{id}', '{flightNumber}', '{departureDate}');");
+
+            return true;
+        }
+
         public async Task<int> GetFreeTickets(string flightNumber, string departureDate)
         {
             var result =

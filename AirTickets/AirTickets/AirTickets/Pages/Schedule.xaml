@@ -11,16 +11,51 @@
         <vm:ScheduleViewModel/>
     </UserControl.DataContext>
     <Grid>
-        <StackPanel>
-            <DataGrid ItemsSource="{Binding VisibleSchedule}" IsReadOnly="True" MaxWidth="800" HorizontalAlignment="Left" x:Name="schedule"/>
-            <DataGrid ItemsSource="{Binding SelectedFlightData}" IsReadOnly="True" MaxWidth="400" HorizontalAlignment="Right"/>
-            <TextBlock Text="{Binding Message}"/>
-            <StackPanel Orientation="Horizontal">
-                <Button Content="&lt;" Command="{Binding MoveLeftCommand}"/>
-                <Button Content=">" Command="{Binding MoveRightCommand}"/>
-            </StackPanel>
-            <Button Content="Get data" Command="{Binding GetDataCommand}"/>
-            <Button Content="Connect" Command="{Binding ConnectCommand}"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DataGrid ItemsSource="{Binding VisibleSchedule}" IsReadOnly="True" MaxWidth="800"
+                      HorizontalAlignment="Left" x:Name="schedule" Grid.Column="0" Grid.Row="0"/>
+        <Border Grid.Column="1" Grid.Row="0" Width="200" MaxHeight="200" CornerRadius="5" BorderThickness="2" BorderBrush="White">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Ticket issuance" FontSize="16" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0"/>
+                <TextBlock Text="{Binding SelectedFlight}" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"/>
+                <TextBlock Text="Name:" Grid.Column="0" Grid.Row="2"/>
+                <TextBlock Text="Surname:" Grid.Column="0" Grid.Row="3"/>
+                <TextBlock Text="Patronymic:" Grid.Column="0" Grid.Row="4"/>
+                <TextBlock Text="ID:" Grid.Column="0" Grid.Row="5"/>
+                <TextBox Text="{Binding SelectedName}" Grid.Column="1" Grid.Row="2"/>
+                <TextBox Text="{Binding SelectedSurname}" Grid.Column="1" Grid.Row="3"/>
+                <TextBox Text="{Binding SelectedPatronymic}" Grid.Column="1" Grid.Row="4"/>
+                <TextBox Text="{Binding SelectedID}" Grid.Column="1" Grid.Row="5"/>
+                <Button Content="Buy" Command="{Binding BuyTicketCommand}" Grid.ColumnSpan="2" Grid.Row="6"/>
+            </Grid>
+        </Border>
+        <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1">
+            <Button Content="&lt;" Command="{Binding MoveLeftCommand}"/>
+            <Button Content=">" Command="{Binding MoveRightCommand}"/>
         </StackPanel>
+        <Button Content="Get data" Command="{Binding GetDataCommand}" Grid.Column="0" Grid.Row="2"/>
+        <Button Content="Connect" Command="{Binding ConnectCommand}" Grid.Column="1" Grid.Row="2"/>
     </Grid>
 </UserControl>
