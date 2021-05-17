@@ -38,13 +38,14 @@ CREATE TABLE Schedule(
 	WeekdayNumber INT CHECK(WeekdayNumber >= 1 AND WeekdayNumber <= 7) NOT NULL,
 	DepartureTime TIME NOT NULL,
     FlightTime INTERVAL NOT NULL,
+	TotalTickets INT CHECK (TotalTickets >= 0) NOT NULL,
 	Plane CHAR(7) REFERENCES Planes(Id) NOT NULL,
     TicketCost MONEY NOT NULL
 );
 
 CREATE TABLE Flights(
 	FlightNumber CHAR(6) REFERENCES Schedule(ID) NOT NULL,
-	TotalTickets INT CHECK (TotalTickets >= 0) NOT NULL,
+	TotalTickets INT CHECK (TotalTickets = (Select TotalTickets FROM Schedule WHERE ID = FlightNumber)) NOT NULL,
 	SoldTickets INT CHECK (SoldTickets BETWEEN 0 AND TotalTickets) NOT NULL,
 	DepartureDate DATE NOT NULL,
 	PRIMARY KEY (FlightNumber, DepartureDate)
