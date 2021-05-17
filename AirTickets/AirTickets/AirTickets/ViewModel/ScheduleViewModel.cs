@@ -21,10 +21,10 @@ namespace AirTickets.ViewModel
             MoveLeftCommand = new RelayCommand(OnMoveLeftCommandExecuted, CanMoveLeftCommandExecute);
         }
 
-        public void FlightSelected (object sender, SelectionChangedEventArgs args)
+        public async void FlightSelected (object sender, SelectionChangedEventArgs args)
         {
             var row = (DataRowView)args.AddedItems[0];
-            Message = row.Row.ItemArray.Length.ToString();
+          //  SelectedFlightData = await dataBase.GetFlightInfo(row["Flight"], row["Departure date"], row[""])
             return;
         }
 
@@ -115,19 +115,23 @@ namespace AirTickets.ViewModel
         {
             var schedule = await dataBase.GetScheduleAsync();
             schedule.Columns.Add(new DataColumn("Departure date", typeof(string)));
-            foreach (DataRow item in schedule.Rows)
+            schedule.Columns.Add(new DataColumn("Free seats", typeof(string)));
+            foreach (DataRow row in schedule.Rows)
             {
-                var intDayOfWeek = int.Parse(item["weekdaynumber"].ToString());
+                var intDayOfWeek = int.Parse(row["weekdaynumber"].ToString());
                 var dayOfWeek = (DayOfWeek)intDayOfWeek;
                 var minimum = DateTime.Now;
-                var departureTime = (TimeSpan)item["departuretime"];
+                var departureTime = (TimeSpan)row["departuretime"];
                 if (minimum.TimeOfDay.TotalMinutes > departureTime.TotalMinutes + 120)
                 {
                     minimum = minimum.AddDays(1);
                 }
-                item["Departure date"] = GetNearestDate(dayOfWeek, minimum);
+                row["Departure date"] = GetNearestDate(dayOfWeek, minimum);
+                row["Free seats"] = await dataBase.GetFreeTickets(row["id"].ToString(), row["Departure date"].ToString());
             }
             schedule.Columns.Remove("weekdaynumber");
+            schedule.Columns.Remove("plane");
+            schedule.Columns.Remove("totaltickets");
             schedule.Columns["id"].ColumnName = "Flight";
             schedule.Columns["ticketcost"].ColumnName = "Ticket cost";
             schedule.Columns["departuretime"].ColumnName = "Departure time";
@@ -135,6 +139,7 @@ namespace AirTickets.ViewModel
             schedule.Columns["arrivalairport"].ColumnName = "To";
             schedule.Columns["flighttime"].ColumnName = "Flight time";
             schedule.Columns["Departure date"].SetOrdinal(3);
+
             VisibleSchedule = schedule.DefaultView;
             VisibleSchedule.Sort = "Departure date asc, Departure time asc";
             Message = "ok";

@@ -35,9 +35,28 @@ namespace DataBase
             return result;
         }
 
+        public async Task<int> GetFreeTickets(string flightNumber, string departureDate)
+        {
+            var result =
+                await DoRequestAsync($"WITH FlightInfo AS (SELECT * FROM Schedule WHERE ID = '{flightNumber}') SELECT (FlightInfo.TotalTickets - SoldTickets) AS FreeTickets FROM Flights LEFT JOIN FlightInfo ON FlightNumber = ID WHERE DepartureDate = '{departureDate}';");
+            if (result.Rows.Count == 0 || result.Rows[0].ItemArray[0].GetType() == typeof(DBNull))
+            {
+                result = await DoRequestAsync($"SELECT TotalTickets FROM Schedule WHERE ID = '{flightNumber}';");
+                return (int)result.Rows[0].ItemArray[0];
+            }
+
+            return (int)result.Rows[0].ItemArray[0];
+        }
+
         public async Task<DataTable> GetScheduleAsync() => await DoRequestAsync("select * from schedule;");
 
-        public async Task<DataTable> GetArchiveAsync() => await DoRequestAsync("select * from archive order by DepartureDate");
+        public async Task<DataTable> GetArchiveAsync() => await DoRequestAsync("select * from archive order by DepartureDate;");
+
+        public async Task<DataTable> GetFlightInfo(string flightNumber, string departureDate, int totalTickets)
+        {
+            await DoRequestAsync($"insert into flights values ('{flightNumber}', {totalTickets}, 0, '{departureDate}');");
+            return await DoRequestAsync($"select * from flights where FlightNumber = '{flightNumber}'");
+        }
 
         public void Dispose()
         {

@@ -12,7 +12,7 @@
     </UserControl.DataContext>
     <Grid>
         <StackPanel>
-            <DataGrid ItemsSource="{Binding VisibleSchedule}" IsReadOnly="True" MaxWidth="750" HorizontalAlignment="Left" x:Name="schedule"/>
+            <DataGrid ItemsSource="{Binding VisibleSchedule}" IsReadOnly="True" MaxWidth="800" HorizontalAlignment="Left" x:Name="schedule"/>
             <DataGrid ItemsSource="{Binding SelectedFlightData}" IsReadOnly="True" MaxWidth="400" HorizontalAlignment="Right"/>
             <TextBlock Text="{Binding Message}"/>
             <StackPanel Orientation="Horizontal">
