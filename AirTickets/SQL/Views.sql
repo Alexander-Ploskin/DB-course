@@ -63,6 +63,7 @@ RETURN QUERY (
 END;
 $$;
 
+--Returns the shortest time of transfer awaiting between two flights
 CREATE OR REPLACE FUNCTION GetTransferTime(FirstFlightID CHAR(6), SecondFlightID CHAR(6))
 RETURNS INTERVAL
 LANGUAGE plpgsql AS
@@ -70,7 +71,7 @@ $$
 BEGIN
 RETURN (
 	SELECT ((B.DepartureTime - '00:00:00') + (INTERVAL '24' HOUR) * 
-	(LEAST((ABS(B.WeekdayNumber - A.WeekdayNumber) % 7), (ABS(B.WeekdayNumber + 7 - A.WeekdayNumber) % 7), (ABS(B.WeekdayNumber - 6 - A.WeekdayNumber) % 7)))
+	((B.WeekdayNumber - A.WeekdayNumber + 7) % 7)
 	- A.DepartureTime - A.FlightTime)
 	FROM Schedule A LEFT JOIN Schedule B 
 	ON (A.ArrivalAirport = B.DepartureAirport) WHERE A.ID = FirstFlightID AND B.ID = SecondFlightID
