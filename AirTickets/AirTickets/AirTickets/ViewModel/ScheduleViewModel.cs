@@ -17,8 +17,8 @@ namespace AirTickets.ViewModel
         {
             GetDataCommand = new RelayAsyncCommand(OnGetDataCommandExecuted, (ex) => Message = ex.Message, CanGetDataCommandExecute);
             ConnectCommand = new RelayAsyncCommand(OnConnectCommandExecuted, (ex) => Message = ex.Message, CanConnectCommandExecute);
-            MoveRightCommand = new RelayCommand(OnMoveRightCommandExecuted, CanMoveRightCommandExecute);
-            MoveLeftCommand = new RelayCommand(OnMoveLeftCommandExecuted, CanMoveLeftCommandExecute);
+            MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => Message = ex.Message, CanMoveRightCommandExecute);
+            MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => Message = ex.Message, CanMoveLeftCommandExecute);
         }
 
         public async void FlightSelected (object sender, SelectionChangedEventArgs args)
@@ -30,18 +30,15 @@ namespace AirTickets.ViewModel
 
         private int pageNumber;
 
+        private DateTime currentMin;
+
         public ICommand MoveRightCommand { get; }
 
-        private void OnMoveRightCommandExecuted(object parameter)
+        private async Task OnMoveRightCommandExecuted(object parameter)
         {
             pageNumber++;
-
-            foreach (DataRow row in VisibleSchedule.Table.Rows)
-            {
-                var departureDate = DateTime.Parse((string)row["Departure date"]);
-                row["Departure date"] = departureDate.AddDays(7).ToString("dd/MM/yyyy");
-                VisibleSchedule.Sort = "Departure date asc, Departure time asc";
-            }
+            currentMin = currentMin.AddDays(7);
+            await FillSchedule(currentMin);
         }
 
         private bool CanMoveRightCommandExecute(object p)
@@ -49,20 +46,16 @@ namespace AirTickets.ViewModel
 
         public ICommand MoveLeftCommand { get; }
 
-        private void OnMoveLeftCommandExecuted(object parameter)
+        private async Task OnMoveLeftCommandExecuted(object parameter)
         {
             if (pageNumber < 1)
             {
                 return;
             }
             pageNumber--;
+            currentMin = currentMin.AddDays(-7);
 
-            foreach (DataRow row in VisibleSchedule.Table.Rows)
-            {
-                var departureDate = DateTime.Parse((string)row["Departure date"]);
-                row["Departure date"] = departureDate.AddDays(-7).ToString("dd/MM/yyyy");
-                VisibleSchedule.Sort = "Departure date asc, Departure time asc";
-            }
+            await FillSchedule(currentMin);
         }
 
         private bool CanMoveLeftCommandExecute(object p) => pageNumber > 0;
@@ -111,7 +104,7 @@ namespace AirTickets.ViewModel
             return day.ToString("dd/MM/yyyy");
         }
 
-        private async Task OnGetDataCommandExecuted(object parameter)
+        private async Task FillSchedule(DateTime minimum)
         {
             var schedule = await dataBase.GetScheduleAsync();
             schedule.Columns.Add(new DataColumn("Departure date", typeof(string)));
@@ -120,13 +113,13 @@ namespace AirTickets.ViewModel
             {
                 var intDayOfWeek = int.Parse(row["weekdaynumber"].ToString());
                 var dayOfWeek = (DayOfWeek)intDayOfWeek;
-                var minimum = DateTime.Now;
                 var departureTime = (TimeSpan)row["departuretime"];
+                var localMinimum = minimum;
                 if (minimum.TimeOfDay.TotalMinutes > departureTime.TotalMinutes + 120)
                 {
-                    minimum = minimum.AddDays(1);
+                    localMinimum = localMinimum.AddDays(1);
                 }
-                row["Departure date"] = GetNearestDate(dayOfWeek, minimum);
+                row["Departure date"] = GetNearestDate(dayOfWeek, localMinimum);
                 row["Free seats"] = await dataBase.GetFreeTickets(row["id"].ToString(), row["Departure date"].ToString());
             }
             schedule.Columns.Remove("weekdaynumber");
@@ -143,6 +136,12 @@ namespace AirTickets.ViewModel
             VisibleSchedule = schedule.DefaultView;
             VisibleSchedule.Sort = "Departure date asc, Departure time asc";
             Message = "ok";
+        }
+
+        private async Task OnGetDataCommandExecuted(object parameter)
+        {
+            currentMin = DateTime.Now;
+            await FillSchedule(DateTime.Now);
         }
 
         private bool CanGetDataCommandExecute(object parameter)
