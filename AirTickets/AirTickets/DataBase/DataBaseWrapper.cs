@@ -29,11 +29,18 @@ namespace DataBase
 
         private async Task<DataTable> DoRequestAsync(string request)
         {
-            using var command = new NpgsqlCommand(request, connection) { CommandType = CommandType.Text };
-            using var reader = await command.ExecuteReaderAsync();
-            var result = new DataTable();
-            result.Load(reader);
-            return result;
+            try
+            {
+                using var command = new NpgsqlCommand(request, connection) { CommandType = CommandType.Text };
+                using var reader = await command.ExecuteReaderAsync();
+                var result = new DataTable();
+                result.Load(reader);
+                return result;
+            }
+            catch(Exception)
+            {
+                return new DataTable();
+            }
         }
 
         public async Task InsertFlight(string flightNumber, string departureDate)
@@ -48,14 +55,14 @@ namespace DataBase
                 patronymic = "NULL";
             }
 
-            await DoRequestAsync($"INSERT INTO Customers VALUES ('{id}', '{name}', '{surname}', '{patronymic}');");
-
             var splittedDepartureDate = departureDate.Split(".");
             var day = splittedDepartureDate[0];
             var month = splittedDepartureDate[1];
             var year = splittedDepartureDate[2];
 
             departureDate = $"{year}-{month}-{day}";
+
+            await DoRequestAsync($"INSERT INTO Customers VALUES ('{id}', '{name}', '{surname}', '{patronymic}');");
 
             await DoRequestAsync($"INSERT INTO Passengers VALUES ('{id}', '{flightNumber}', '{departureDate}');");
 
@@ -93,8 +100,22 @@ namespace DataBase
 
         public async Task InsertAirport(string iataCode, string place)
         {
-            await DoRequestAsync($"insert into places values ('{place}')");
-            await DoRequestAsync($"INSERT INTO Airports VALUES ('{iataCode}', '{place}');");
+            try
+            {
+                await DoRequestAsync($"insert into places values ('{place}')");
+                await DoRequestAsync($"INSERT INTO Airports VALUES ('{iataCode}', '{place}');");
+            }
+            catch (Exception)
+            {
+                await DoRequestAsync($"INSERT INTO Airports VALUES ('{iataCode}', '{place}');");
+            }
+        }
+
+        public async Task InsertPlane(string id, string producer, string model)
+        {
+            await DoRequestAsync($"INSERT INTO Producers VALUES('{producer}');");
+            await DoRequestAsync($"INSERT INTO Models VALUES('{producer}', '{model}');");
+            await DoRequestAsync($"INSERT INTO Planes VALUES('{id}', '{producer} {model}');");
         }
 
         public void Dispose()

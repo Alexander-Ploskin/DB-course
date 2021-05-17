@@ -15,6 +15,7 @@ namespace AirTickets.ViewModel
         {
             RefreshDataCommand = new RelayAsyncCommand(OnRefreshDataCommandExecuted, (Exception ex) => { }, CanRefreshDataCommandExecute);
             AddAirportCommand = new RelayAsyncCommand(OnAddAirportCommandExecuted, (Exception ex) => { }, CanAddAirportCommandExecute);
+            AddNewPlaneCommand = new RelayAsyncCommand(OnAddNewPlaneCommandExecuted, (Exception ex) => { }, CanAddNewPlaneCommandExecute);
         }
 
         private DataBaseWrapper dataBase;
@@ -58,5 +59,29 @@ namespace AirTickets.ViewModel
         private ObservableCollection<string> existingAirports;
 
         public ObservableCollection<string> ExistingAirports { get => existingAirports; set => Set(ref existingAirports, value); }
+
+        private string newPlaneID;
+
+        public string NewPlaneID { get => newPlaneID; set => Set(ref newPlaneID, value); }
+
+        private string newPlaneProducer;
+
+        public string NewPlaneProducer { get => newPlaneProducer; set => Set(ref newPlaneProducer, value); }
+
+        private string newPlaneModel;
+
+        public string NewPlaneModel { get => newPlaneModel; set => Set(ref newPlaneModel, value); }
+
+        public ICommand AddNewPlaneCommand { get; }
+
+        private async Task OnAddNewPlaneCommandExecuted(object parameter)
+        {
+            await dataBase.InsertPlane(NewPlaneID, NewPlaneProducer, NewPlaneModel);
+        }
+
+        private bool CanAddNewPlaneCommandExecute(object parameter)
+        {
+            return !string.IsNullOrEmpty(NewPlaneID) && !string.IsNullOrEmpty(NewPlaneModel) && !string.IsNullOrEmpty(NewPlaneProducer);
+        }
     }
 }

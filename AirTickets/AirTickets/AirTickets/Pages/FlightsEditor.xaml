@@ -41,10 +41,9 @@
                 <Button Content="Add" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Command="{Binding AddAirportCommand}"/>
             </Grid>
         </Border>
-        <Border Grid.Row="0" Grid.Column="1" Margin="10">
+        <Border Grid.Row="0" Grid.Column="1" Margin="10"  CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ItemBorder}">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
@@ -55,15 +54,14 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="Destination airport" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
-                <TextBlock Text="Choose existing:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center"/>
-                <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{Binding ExistingAirports}"/>
-                <TextBlock Text="Add new:" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
-                <TextBlock Text="IATA code:" Grid.Row="2" Grid.Column="1"/>
-                <TextBlock Text="Place:" Grid.Row="3" Grid.Column="1"/>
-                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding NewArrivalAirportIataCode}"/>
-                <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding NewArrivalAirportPlace}"/>
-                <Button Content="Add" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
+                <TextBlock Text="Add new plane" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
+                <TextBlock Text="ID:" Grid.Row="1" Grid.Column="0"/>
+                <TextBlock Text="Producer:" Grid.Row="2" Grid.Column="0"/>
+                <TextBlock Text="Model:" Grid.Row="3" Grid.Column="0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewPlaneID, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding NewPlaneProducer, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding NewPlaneModel, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Content="Add" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Command="{Binding AddNewPlaneCommand}"/>
             </Grid>
         </Border>
         <Border Grid.Row="1" Grid.Column="0" Margin="10">
