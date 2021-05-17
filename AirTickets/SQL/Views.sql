@@ -6,7 +6,7 @@ AS SELECT DISTINCT Passengers.Customer, CASE WHEN A.Flights >= 40 THEN 20
 FROM Passengers, (SELECT Customer, (COUNT(*)) AS Flights
 		  		  FROM passengers
 		  		  GROUP BY Customer) AS A
-WHERE Passengers.Customer = A.Customer
+WHERE Passengers.Customer = A.Customer;
 
 --Returns table which contains average occupancy for every month of last year
 CREATE OR REPLACE FUNCTION GetAverageOccupancy(AirportA CHAR(20), AirportB CHAR(20))
@@ -63,32 +63,18 @@ RETURN QUERY (
 END;
 $$;
 
---Returns is it possible to do transition between two flights with max transfer time
-CREATE OR REPLACE FUNCTION CheckTransfer(FirstFlightID CHAR(6), SecondFlightID CHAR(6), MaxTransferTime INTERVAL)
-RETURNS BOOL
+CREATE OR REPLACE FUNCTION GetTransferTime(FirstFlightID CHAR(6), SecondFlightID CHAR(6))
+RETURNS INTERVAL
 LANGUAGE plpgsql AS
 $$
-DECLARE
-FirstFlightDeparture CHAR(3);
-SecondFlightDeparture CHAR(3);
-FirstFlightDestination CHAR(3);
-SecondFlightDestination CHAR(3);
-FirstFlightWeekdayNumber INT;
-SecondFlightWeekdayNumber INT;
-FirstFlightArrivalTime TIME;
-SecondFlightDepartureTime TIME;
 BEGIN
-SELECT DepartureAirport, ArrivalAirport, WeekdayNumber, DepartureTime + FlightTime INTO
-FirstFlightDeparture, FirstFlightDestination, FirstFlightWeekdayNumber, FirstFlightArrivalTime 
-FROM Schedule WHERE ID = FirstFlightID;
-SELECT DepartureAirport, ArrivalAirport, WeekdayNumber, DepartureTime INTO
-SecondFlightDeparture, SecondFlightDestination, SecondFlightWeekdayNumber, SecondFlightDepartureTime 
-FROM Schedule WHERE ID = SecondFlightID;
-RETURN 
-((SecondFlightDepartureTime - '00:00:00') + 
- (INTERVAL '24' HOUR) * ((SecondFlightWeekdayNumber - FirstFlightWeekdayNumber) % 7) - FirstFlightArrivalTime
-BETWEEN INTERVAL '0' HOUR AND MaxTransferTime) 
-AND (FirstFlightDeparture <> SecondFlightDestination) AND (FirstFlightDestination = SecondFlightDeparture);
+RETURN (
+	SELECT ((B.DepartureTime - '00:00:00') + (INTERVAL '24' HOUR) * 
+	(LEAST((ABS(B.WeekdayNumber - A.WeekdayNumber) % 7), (ABS(B.WeekdayNumber + 7 - A.WeekdayNumber) % 7), (ABS(B.WeekdayNumber - 6 - A.WeekdayNumber) % 7)))
+	- A.DepartureTime - A.FlightTime)
+	FROM Schedule A LEFT JOIN Schedule B 
+	ON (A.ArrivalAirport = B.DepartureAirport) WHERE A.ID = FirstFlightID AND B.ID = SecondFlightID
+);
 END;
 $$;
 
@@ -110,7 +96,7 @@ BEGIN
 		(SELECT A.ID AS FirstFlight, B.ID AS Secondflight, (A.TicketCost + B.TicketCost) AS FlightCost
 		FROM schedule A JOIN schedule B 
 		ON (A.ArrivalAirport = B.DepartureAirport) and (A.DepartureAirport = StartPoint) and (B.ArrivalAirport = FinalPoint)
-		 WHERE CheckTransfer(A.ID, B.ID, MaxTransferTime)
+		 WHERE GetTransferTime(A.ID, B.ID) BETWEEN INTERVAL '0' HOUR AND MaxTransferTime
 		ORDER BY FlightCost ASC)
 		UNION
 		(SELECT ID as FirstFlight, null as SecondFlight, schedule.TicketCost FROM schedule

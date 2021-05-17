@@ -13,7 +13,7 @@ ORDER BY NumberOfFlights DESC FETCH FIRST 10 ROWS ONLY;
  LEFT JOIN Schedule ON Passengers.FlightNumber =  Schedule.ID 
  LEFT JOIN Airports ON ArrivalAirport = Airports.IATACode
  WHERE schedule.DepartureAirport = 'LED'
- GROUP BY Place ORDER BY frequency DESC FETCH FIRST 1 ROWS ONLY;
+ GROUP BY Place ORDER BY Frequency DESC FETCH FIRST 1 ROWS ONLY;
 
 --4.The most popular airport for transfers
 SELECT TransferPoint, Frequency FROM GetOneTransferFlightsInfo(INTERVAL '1' DAY)
