@@ -14,7 +14,7 @@ namespace AirTickets.ViewModel
     {
         public FlightsEditorViewModel()
         {
-            RefreshDataCommand = new RelayAsyncCommand(OnRefreshDataCommandExecuted, (Exception ex) => { }, CanRefreshDataCommandExecute);
+            Task.Run(() => RefreshData());
             AddAirportCommand = new RelayAsyncCommand(OnAddAirportCommandExecuted, (Exception ex) => { }, CanAddAirportCommandExecute);
             AddNewPlaneCommand = new RelayAsyncCommand(OnAddNewPlaneCommandExecuted, (Exception ex) => { }, CanAddNewPlaneCommandExecute);
             AddNewFlightCommand = new RelayAsyncCommand(OnAddNewFlightCommandExecuted, (Exception ex) => { throw ex; }, CanAddNewFlightCommandExecute);
@@ -22,9 +22,7 @@ namespace AirTickets.ViewModel
 
         private DataBaseWrapper dataBase;
 
-        public ICommand RefreshDataCommand { get; }
-
-        private async Task OnRefreshDataCommandExecuted(object parameter)
+        private async Task RefreshData()
         {
             dataBase = await DataBaseWrapper.ConnectAsync();
             var airports = await dataBase.GetAirports();
@@ -44,13 +42,13 @@ namespace AirTickets.ViewModel
             }
         }
 
-        private bool CanRefreshDataCommandExecute(object parameter) => true;
-
         public ICommand AddAirportCommand { get; }
 
         private async Task OnAddAirportCommandExecuted(object parameter)
         {
+            await RefreshData();
             await dataBase.InsertAirport(NewAirportIataCode, NewAirportPlace);
+            await RefreshData();
         }
 
         private bool CanAddAirportCommandExecute(object parameter)
@@ -82,7 +80,9 @@ namespace AirTickets.ViewModel
 
         private async Task OnAddNewPlaneCommandExecuted(object parameter)
         {
+            await RefreshData();
             await dataBase.InsertPlane(NewPlaneID, NewPlaneProducer, NewPlaneModel);
+            await RefreshData();
         }
 
         private bool CanAddNewPlaneCommandExecute(object parameter)
@@ -130,10 +130,12 @@ namespace AirTickets.ViewModel
 
         private async Task OnAddNewFlightCommandExecuted(object parameter)
         {
+            await RefreshData();
             var weekdayNumber = DaysOfWeek.IndexOf(NewFlightWeekdayNumber) + 1;
             var departureTime = NewFlightDepartureTime.TimeOfDay.ToString();
             await dataBase.InsertSchedule(NewFlightID, NewFlightDepartureAirport, NewFlightArrivalAirport, weekdayNumber,
                 departureTime, NewFlightFlightTime.ToString(), 220, NewFlightPlane, NewFlightTicketCost.Value);
+            await RefreshData();
         }
 
         private bool CanAddNewFlightCommandExecute(object parameter)

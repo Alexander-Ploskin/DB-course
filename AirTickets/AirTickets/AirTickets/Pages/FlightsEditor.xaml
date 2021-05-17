@@ -19,7 +19,6 @@
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition/>
-            <RowDefinition/>
         </Grid.RowDefinitions>
         <Border Grid.Row="0" Grid.Column="0" Margin="10" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ItemBorder}">
             <Grid>
@@ -99,9 +98,6 @@
                 <ComboBox Grid.Column="3" Grid.Row="4" ItemsSource="{Binding ExistingAirports}" SelectedValue="{Binding NewFlightArrivalAirport, Mode=OneWayToSource}"/>
                 <Button Grid.Column="0" Grid.ColumnSpan="4" Content="Add new flight into schedule" Grid.Row="5" Command="{Binding AddNewFlightCommand}"/>
             </Grid>
-        </Border>
-        <Border  Grid.Column="1" Grid.Row="2" Margin="150,60,150,60">
-            <Button Content="Refresh data" Command="{Binding RefreshDataCommand}"/>
         </Border>
     </Grid>
 </UserControl>
