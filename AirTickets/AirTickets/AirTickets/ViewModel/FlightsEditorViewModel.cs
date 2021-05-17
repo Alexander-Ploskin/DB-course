@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using AirTickets.Command;
 using DataBase;
+using System.Linq;
 
 namespace AirTickets.ViewModel
 {
@@ -16,6 +17,7 @@ namespace AirTickets.ViewModel
             RefreshDataCommand = new RelayAsyncCommand(OnRefreshDataCommandExecuted, (Exception ex) => { }, CanRefreshDataCommandExecute);
             AddAirportCommand = new RelayAsyncCommand(OnAddAirportCommandExecuted, (Exception ex) => { }, CanAddAirportCommandExecute);
             AddNewPlaneCommand = new RelayAsyncCommand(OnAddNewPlaneCommandExecuted, (Exception ex) => { }, CanAddNewPlaneCommandExecute);
+            AddNewFlightCommand = new RelayAsyncCommand(OnAddNewFlightCommandExecuted, (Exception ex) => { throw ex; }, CanAddNewFlightCommandExecute);
         }
 
         private DataBaseWrapper dataBase;
@@ -31,6 +33,14 @@ namespace AirTickets.ViewModel
             {
                 var airportData = (DataRow)airport;
                 ExistingAirports.Add(airportData.ItemArray[0].ToString());
+            }
+
+            var planes = await dataBase.GetPlanes();
+            ExistingPlanes = new ObservableCollection<string>();
+            foreach (var plane in planes)
+            {
+                var planeData = (DataRow)plane;
+                ExistingPlanes.Add(planeData.ItemArray[0].ToString());
             }
         }
 
@@ -56,10 +66,6 @@ namespace AirTickets.ViewModel
 
         public string NewAirportPlace { get => newAirportPlace; set => Set(ref newAirportPlace, value); }
 
-        private ObservableCollection<string> existingAirports;
-
-        public ObservableCollection<string> ExistingAirports { get => existingAirports; set => Set(ref existingAirports, value); }
-
         private string newPlaneID;
 
         public string NewPlaneID { get => newPlaneID; set => Set(ref newPlaneID, value); }
@@ -82,6 +88,57 @@ namespace AirTickets.ViewModel
         private bool CanAddNewPlaneCommandExecute(object parameter)
         {
             return !string.IsNullOrEmpty(NewPlaneID) && !string.IsNullOrEmpty(NewPlaneModel) && !string.IsNullOrEmpty(NewPlaneProducer);
+        }
+
+        private string newFlightID;
+
+        public string NewFlightID { get => newFlightID; set => Set(ref newFlightID, value); }
+
+        public string NewFlightArrivalAirport { get; set; }
+
+        public string NewFlightDepartureAirport { get; set; }
+
+        private int? newFlightTicketCost;
+
+        public int? NewFlightTicketCost { get => newFlightTicketCost; set => Set(ref newFlightTicketCost, value); }
+
+        private DateTime newFlightDepartureTime;
+
+        public DateTime NewFlightDepartureTime { get => newFlightDepartureTime; set => Set(ref newFlightDepartureTime, value); }
+
+        private TimeSpan? newFlightFlightTime;
+
+        public TimeSpan? NewFlightFlightTime { get => newFlightFlightTime; set => Set(ref newFlightFlightTime, value); }
+
+        public ObservableCollection<string> DaysOfWeek { get; } = new ObservableCollection<string>() { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+        private string newFlightWeekdayNumber;
+
+        public string NewFlightWeekdayNumber { get => newFlightWeekdayNumber; set => Set(ref newFlightWeekdayNumber, value); }
+
+        private ObservableCollection<string> existingAirports;
+
+        public ObservableCollection<string> ExistingAirports { get => existingAirports; set => Set(ref existingAirports, value); }
+
+        private ObservableCollection<string> existingPlanes;
+
+        public ObservableCollection<string> ExistingPlanes { get => existingPlanes; set => Set(ref existingPlanes, value); }
+
+        public string NewFlightPlane { get; set; }
+
+        public ICommand AddNewFlightCommand { get; }
+
+        private async Task OnAddNewFlightCommandExecuted(object parameter)
+        {
+            var weekdayNumber = DaysOfWeek.IndexOf(NewFlightWeekdayNumber) + 1;
+            var departureTime = NewFlightDepartureTime.TimeOfDay.ToString();
+            await dataBase.InsertSchedule(NewFlightID, NewFlightDepartureAirport, NewFlightArrivalAirport, weekdayNumber,
+                departureTime, NewFlightFlightTime.ToString(), 220, NewFlightPlane, NewFlightTicketCost.Value);
+        }
+
+        private bool CanAddNewFlightCommandExecute(object parameter)
+        {
+            return true;
         }
     }
 }

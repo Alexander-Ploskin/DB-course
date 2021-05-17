@@ -98,6 +98,12 @@ namespace DataBase
             return result.Rows;
         }
 
+        public async Task<DataRowCollection> GetPlanes()
+        {
+            var result = await DoRequestAsync("select * from planes");
+            return result.Rows;
+        }
+
         public async Task InsertAirport(string iataCode, string place)
         {
             try
@@ -116,6 +122,12 @@ namespace DataBase
             await DoRequestAsync($"INSERT INTO Producers VALUES('{producer}');");
             await DoRequestAsync($"INSERT INTO Models VALUES('{producer}', '{model}');");
             await DoRequestAsync($"INSERT INTO Planes VALUES('{id}', '{producer} {model}');");
+        }
+
+        public async Task InsertSchedule(string id, string departureAirport, string arrivalAirport, int weekdayNumber, 
+            string departureTime, string flightTime, int totalTickets, string plane, int ticketCost)
+        {
+            await DoRequestAsync($"INSERT INTO Schedule VALUES('{id}', '{departureAirport}', '{arrivalAirport}', '{weekdayNumber}', '{departureTime}', '{flightTime}', '{totalTickets}', '{plane}', '{ticketCost}');");
         }
 
         public void Dispose()
