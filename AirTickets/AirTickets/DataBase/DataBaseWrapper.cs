@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Npgsql;
@@ -82,6 +83,18 @@ namespace DataBase
         {
             await DoRequestAsync($"insert into flights values ('{flightNumber}', {totalTickets}, 0, '{departureDate}');");
             return await DoRequestAsync($"select * from flights where FlightNumber = '{flightNumber}'");
+        }
+
+        public async Task<DataRowCollection> GetAirports()
+        {
+            var result = await DoRequestAsync("select * from airports");
+            return result.Rows;
+        }
+
+        public async Task InsertAirport(string iataCode, string place)
+        {
+            await DoRequestAsync($"insert into places values ('{place}')");
+            await DoRequestAsync($"INSERT INTO Airports VALUES ('{iataCode}', '{place}');");
         }
 
         public void Dispose()

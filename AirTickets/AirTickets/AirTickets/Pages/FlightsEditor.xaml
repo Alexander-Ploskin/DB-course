@@ -3,10 +3,129 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:wpfTool="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
              xmlns:local="clr-namespace:AirTickets.Pages"
-             mc:Ignorable="d" 
+             xmlns:vm="clr-namespace:AirTickets.ViewModel"
+             mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <vm:FlightsEditorViewModel/>
+    </UserControl.DataContext>
     <Grid>
-        <TextBlock Text="Flights editor"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Grid.Column="0" Margin="10" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ItemBorder}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Add new airport" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
+                <TextBlock Text="IATA code:" Grid.Row="1" Grid.Column="0"/>
+                <TextBlock Text="Place:" Grid.Row="2" Grid.Column="0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewAirportIataCode, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding NewAirportPlace, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Content="Add" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Command="{Binding AddAirportCommand}"/>
+            </Grid>
+        </Border>
+        <Border Grid.Row="0" Grid.Column="1" Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Destination airport" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
+                <TextBlock Text="Choose existing:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center"/>
+                <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{Binding ExistingAirports}"/>
+                <TextBlock Text="Add new:" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
+                <TextBlock Text="IATA code:" Grid.Row="2" Grid.Column="1"/>
+                <TextBlock Text="Place:" Grid.Row="3" Grid.Column="1"/>
+                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding NewArrivalAirportIataCode}"/>
+                <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding NewArrivalAirportPlace}"/>
+                <Button Content="Add" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"/>
+            </Grid>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="0" Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Plane" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
+                <TextBlock Text="Choose existing:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center"/>
+                <ComboBox Grid.Row="2" Grid.Column="0"/>
+                <TextBlock Text="Add new:" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
+                <TextBlock Text="ID:" Grid.Row="2" Grid.Column="1"/>
+                <TextBlock Text="Producer:" Grid.Row="3" Grid.Column="1"/>
+                <TextBlock Text="Model:" Grid.Row="4" Grid.Column="1"/>
+                <TextBox Grid.Row="2" Grid.Column="2"/>
+                <TextBox Grid.Row="3" Grid.Column="2"/>
+                <TextBox Grid.Row="4" Grid.Column="2"/>
+                <Button Content="Add" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2"/>
+            </Grid>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="1" Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Flight data" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" HorizontalAlignment="Center"/>
+                <TextBlock Text="ID:" Grid.Column="0" Grid.Row="1"/>
+                <TextBlock Text="Total tickets:" Grid.Column="0" Grid.Row="2"/>
+                <TextBlock Text="Weekday:" Grid.Column="0" Grid.Row="3"/>
+                <TextBlock Text="Departure time:" Grid.Column="0" Grid.Row="4"/>
+                <TextBlock Text="Ticket cost:" Grid.Column="0" Grid.Row="5"/>
+                <TextBox Grid.Column="1" Grid.Row="1"/>
+                <wpfTool:IntegerUpDown Grid.Column="1" Grid.Row="2" Background="{DynamicResource ButtonBackground}" Minimum="0"/>
+                <ComboBox Grid.Column="1" Grid.Row="3"/>
+                <wpfTool:TimePicker Grid.Column="1" Grid.Row="4" Background="{DynamicResource ButtonBackground}"/>
+                <wpfTool:IntegerUpDown Grid.Column="1" Grid.Row="5" Background="{DynamicResource ButtonBackground}" Minimum="0"/>
+            </Grid>
+        </Border>
+        <Border  Grid.Column="0" Grid.Row="2" Margin="150,60,150,60">
+            <Button Content="Add flight into schedule"/>
+        </Border>
+        <Border  Grid.Column="1" Grid.Row="2" Margin="150,60,150,60">
+            <Button Content="Refresh data" Command="{Binding RefreshDataCommand}"/>
+        </Border>
     </Grid>
 </UserControl>

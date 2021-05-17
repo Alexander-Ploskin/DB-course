@@ -20,6 +20,11 @@
                 <mui:Link DisplayName="Schedule" Source="/Pages/Schedule.xaml"/>
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
+        <mui:LinkGroup DisplayName="Edit flights base">
+            <mui:LinkGroup.Links>
+                <mui:Link DisplayName="Add new flight" Source="/Pages/FlightsEditor.xaml"/>
+            </mui:LinkGroup.Links>
+        </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Archive">
             <mui:LinkGroup.Links>
                 <mui:Link DisplayName="Archive" Source="/Pages/Archive.xaml" />
