@@ -55,7 +55,5 @@
             <Button Content="&lt;" Command="{Binding MoveLeftCommand}"/>
             <Button Content=">" Command="{Binding MoveRightCommand}"/>
         </StackPanel>
-        <Button Content="Get data" Command="{Binding GetDataCommand}" Grid.Column="0" Grid.Row="2"/>
-        <Button Content="Connect" Command="{Binding ConnectCommand}" Grid.Column="1" Grid.Row="2"/>
     </Grid>
 </UserControl>

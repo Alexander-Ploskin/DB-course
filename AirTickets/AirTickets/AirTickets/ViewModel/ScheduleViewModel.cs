@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Linq;
 using AirTickets.Command;
 using System.Windows.Controls;
+using DataBase;
 
 namespace AirTickets.ViewModel
 {
@@ -15,8 +16,9 @@ namespace AirTickets.ViewModel
     {
         public ScheduleViewModel()
         {
+            currentMin = DateTime.Now;
+            Task.Run(() => FillSchedule(currentMin));
             GetDataCommand = new RelayAsyncCommand(OnGetDataCommandExecuted, (ex) => Message = ex.Message, CanGetDataCommandExecute);
-            ConnectCommand = new RelayAsyncCommand(OnConnectCommandExecuted, (ex) => Message = ex.Message, CanConnectCommandExecute);
             MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => Message = ex.Message, CanMoveRightCommandExecute);
             MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => Message = ex.Message, CanMoveLeftCommandExecute);
             BuyTicketCommand = new RelayAsyncCommand(OnBuyTicketCommandExecuted, (ex) => Message = ex.Message, CanBuyTicketCommandExecute);
@@ -26,9 +28,10 @@ namespace AirTickets.ViewModel
 
         private async Task OnBuyTicketCommandExecuted(object parameter)
         {
-            await dataBase.InsertFlight(selectedFlightNumber, selectedFlightDepartureDate);
-            await dataBase.InsertPassenger(SelectedName, SelectedSurname, SelectedPatronymic,
+            await DataBaseWrapper.InsertFlight(selectedFlightNumber, selectedFlightDepartureDate);
+            await DataBaseWrapper.InsertPassenger(SelectedName, SelectedSurname, SelectedPatronymic,
                 SelectedID, selectedFlightNumber, selectedFlightDepartureDate);
+            await FillSchedule(currentMin);
         }
 
         private bool CanBuyTicketCommandExecute(object parameter)
@@ -108,8 +111,6 @@ namespace AirTickets.ViewModel
         private bool connected;
         private bool Connected { get => connected; set => Set(ref connected, value); }
 
-        private DataBase.DataBaseWrapper dataBase;
-
         private DataView schedule;
 
         public DataView VisibleSchedule { get => schedule; set => Set(ref schedule, value); }
@@ -121,21 +122,6 @@ namespace AirTickets.ViewModel
         private string message = "";
 
         public string Message { get => message; set => Set(ref message, value); }
-
-        public ICommand ConnectCommand { get; }
-
-        private async Task OnConnectCommandExecuted(object parameter)
-        {
-            Message = "not connected";
-            dataBase = await DataBase.DataBaseWrapper.ConnectAsync();
-            Message = "connected";
-            Connected = true;
-        }
-
-        private bool CanConnectCommandExecute(object parameter)
-        {
-            return true;
-        }
 
         public ICommand GetDataCommand { get; }
 
@@ -151,7 +137,7 @@ namespace AirTickets.ViewModel
 
         private async Task FillSchedule(DateTime minimum)
         {
-            var schedule = await dataBase.GetScheduleAsync();
+            var schedule = await DataBaseWrapper.GetScheduleAsync();
             schedule.Columns.Add(new DataColumn("Departure date", typeof(string)));
             schedule.Columns.Add(new DataColumn("Free seats", typeof(string)));
             foreach (DataRow row in schedule.Rows)
@@ -165,7 +151,7 @@ namespace AirTickets.ViewModel
                     localMinimum = localMinimum.AddDays(1);
                 }
                 row["Departure date"] = GetNearestDate(dayOfWeek, localMinimum);
-                row["Free seats"] = await dataBase.GetFreeTickets(row["id"].ToString(), row["Departure date"].ToString());
+                row["Free seats"] = await DataBaseWrapper.GetFreeTickets(row["id"].ToString(), row["Departure date"].ToString());
             }
             schedule.Columns.Remove("weekdaynumber");
             schedule.Columns.Remove("plane");
@@ -191,12 +177,11 @@ namespace AirTickets.ViewModel
 
         private bool CanGetDataCommandExecute(object parameter)
         {
-            return dataBase != null && Connected;
+            return true;
         }
 
         public void Dispose()
         {
-            dataBase.Dispose();
             VisibleSchedule.Dispose();
         }
     }

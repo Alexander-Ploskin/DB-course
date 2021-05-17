@@ -20,12 +20,9 @@ namespace AirTickets.ViewModel
             AddNewFlightCommand = new RelayAsyncCommand(OnAddNewFlightCommandExecuted, (Exception ex) => { throw ex; }, CanAddNewFlightCommandExecute);
         }
 
-        private DataBaseWrapper dataBase;
-
         private async Task RefreshData()
         {
-            dataBase = await DataBaseWrapper.ConnectAsync();
-            var airports = await dataBase.GetAirports();
+            var airports = await DataBaseWrapper.GetAirports();
             ExistingAirports = new ObservableCollection<string>();
             foreach (var airport in airports)
             {
@@ -33,7 +30,7 @@ namespace AirTickets.ViewModel
                 ExistingAirports.Add(airportData.ItemArray[0].ToString());
             }
 
-            var planes = await dataBase.GetPlanes();
+            var planes = await DataBaseWrapper.GetPlanes();
             ExistingPlanes = new ObservableCollection<string>();
             foreach (var plane in planes)
             {
@@ -47,7 +44,7 @@ namespace AirTickets.ViewModel
         private async Task OnAddAirportCommandExecuted(object parameter)
         {
             await RefreshData();
-            await dataBase.InsertAirport(NewAirportIataCode, NewAirportPlace);
+            await DataBaseWrapper.InsertAirport(NewAirportIataCode, NewAirportPlace);
             await RefreshData();
         }
 
@@ -81,7 +78,7 @@ namespace AirTickets.ViewModel
         private async Task OnAddNewPlaneCommandExecuted(object parameter)
         {
             await RefreshData();
-            await dataBase.InsertPlane(NewPlaneID, NewPlaneProducer, NewPlaneModel);
+            await DataBaseWrapper.InsertPlane(NewPlaneID, NewPlaneProducer, NewPlaneModel);
             await RefreshData();
         }
 
@@ -133,7 +130,7 @@ namespace AirTickets.ViewModel
             await RefreshData();
             var weekdayNumber = DaysOfWeek.IndexOf(NewFlightWeekdayNumber) + 1;
             var departureTime = NewFlightDepartureTime.TimeOfDay.ToString();
-            await dataBase.InsertSchedule(NewFlightID, NewFlightDepartureAirport, NewFlightArrivalAirport, weekdayNumber,
+            await DataBaseWrapper.InsertSchedule(NewFlightID, NewFlightDepartureAirport, NewFlightArrivalAirport, weekdayNumber,
                 departureTime, NewFlightFlightTime.ToString(), 220, NewFlightPlane, NewFlightTicketCost.Value);
             await RefreshData();
         }

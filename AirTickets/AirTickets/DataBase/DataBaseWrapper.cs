@@ -6,31 +6,20 @@ using Npgsql;
 
 namespace DataBase
 {
-    public class DataBaseWrapper : IDisposable
+    public static class DataBaseWrapper
     {
         private const string Server = "localhost";
         private const int Port = 5432;
         private const string Database = "airtickets";
         private const string UserId = "postgres";
         private readonly static string password = Environment.GetEnvironmentVariable("DbPassword");
-        private NpgsqlConnection connection;
 
-        public DataBaseWrapper(NpgsqlConnection connection)
-        {
-            this.connection = connection;
-        }
-
-        public static async Task<DataBaseWrapper> ConnectAsync()
-        {
-            var connection = new NpgsqlConnection($"Server={Server};Port={Port};Database={Database};User Id={UserId};Password={password};");
-            await connection.OpenAsync();
-            return new DataBaseWrapper(connection);
-        }
-
-        private async Task<DataTable> DoRequestAsync(string request)
+        private static async Task<DataTable> DoRequestAsync(string request)
         {
             try
             {
+                using var connection = new NpgsqlConnection($"Server={Server};Port={Port};Database={Database};User Id={UserId};Password={password};");
+                await connection.OpenAsync();
                 using var command = new NpgsqlCommand(request, connection) { CommandType = CommandType.Text };
                 using var reader = await command.ExecuteReaderAsync();
                 var result = new DataTable();
@@ -43,12 +32,12 @@ namespace DataBase
             }
         }
 
-        public async Task InsertFlight(string flightNumber, string departureDate)
+        public static async Task InsertFlight(string flightNumber, string departureDate)
         {
             await DoRequestAsync($"INSERT INTO Flights VALUES ('{flightNumber}', 0, '{departureDate}');");
         }
 
-        public async Task<bool> InsertPassenger(string name, string surname, string patronymic, string id, string flightNumber, string departureDate)
+        public static async Task<bool> InsertPassenger(string name, string surname, string patronymic, string id, string flightNumber, string departureDate)
         {
             if (patronymic == null || patronymic == "")
             {
@@ -69,7 +58,7 @@ namespace DataBase
             return true;
         }
 
-        public async Task<int> GetFreeTickets(string flightNumber, string departureDate)
+        public static async Task<int> GetFreeTickets(string flightNumber, string departureDate)
         {
             var result =
                 await DoRequestAsync($"WITH FlightInfo AS (SELECT * FROM Schedule WHERE ID = '{flightNumber}') SELECT (FlightInfo.TotalTickets - SoldTickets) AS FreeTickets FROM Flights LEFT JOIN FlightInfo ON FlightNumber = ID WHERE DepartureDate = '{departureDate}';");
@@ -82,29 +71,29 @@ namespace DataBase
             return (int)result.Rows[0].ItemArray[0];
         }
 
-        public async Task<DataTable> GetScheduleAsync() => await DoRequestAsync("select * from schedule;");
+        public static async Task<DataTable> GetScheduleAsync() => await DoRequestAsync("select * from schedule;");
 
-        public async Task<DataTable> GetArchiveAsync() => await DoRequestAsync("select * from archive order by DepartureDate;");
+        public static async Task<DataTable> GetArchiveAsync() => await DoRequestAsync("select * from archive order by DepartureDate;");
 
-        public async Task<DataTable> GetFlightInfo(string flightNumber, string departureDate, int totalTickets)
+        public static async Task<DataTable> GetFlightInfo(string flightNumber, string departureDate, int totalTickets)
         {
             await DoRequestAsync($"insert into flights values ('{flightNumber}', {totalTickets}, 0, '{departureDate}');");
             return await DoRequestAsync($"select * from flights where FlightNumber = '{flightNumber}'");
         }
 
-        public async Task<DataRowCollection> GetAirports()
+        public static async Task<DataRowCollection> GetAirports()
         {
             var result = await DoRequestAsync("select * from airports");
             return result.Rows;
         }
 
-        public async Task<DataRowCollection> GetPlanes()
+        public static async Task<DataRowCollection> GetPlanes()
         {
             var result = await DoRequestAsync("select * from planes");
             return result.Rows;
         }
 
-        public async Task InsertAirport(string iataCode, string place)
+        public static async Task InsertAirport(string iataCode, string place)
         {
             try
             {
@@ -117,22 +106,17 @@ namespace DataBase
             }
         }
 
-        public async Task InsertPlane(string id, string producer, string model)
+        public static async Task InsertPlane(string id, string producer, string model)
         {
             await DoRequestAsync($"INSERT INTO Producers VALUES('{producer}');");
             await DoRequestAsync($"INSERT INTO Models VALUES('{producer}', '{model}');");
             await DoRequestAsync($"INSERT INTO Planes VALUES('{id}', '{producer} {model}');");
         }
 
-        public async Task InsertSchedule(string id, string departureAirport, string arrivalAirport, int weekdayNumber, 
+        public static async Task InsertSchedule(string id, string departureAirport, string arrivalAirport, int weekdayNumber, 
             string departureTime, string flightTime, int totalTickets, string plane, int ticketCost)
         {
             await DoRequestAsync($"INSERT INTO Schedule VALUES('{id}', '{departureAirport}', '{arrivalAirport}', '{weekdayNumber}', '{departureTime}', '{flightTime}', '{totalTickets}', '{plane}', '{ticketCost}');");
-        }
-
-        public void Dispose()
-        {
-            connection.Dispose();
         }
     }
 }

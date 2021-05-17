@@ -16,7 +16,6 @@ namespace AirTickets.ViewModel
             GetDataCommand = new RelayAsyncCommand(OnGetDataCommandExecuted, (ex) => StatusMessage = ex.Message, CanGetDataCommandExecute);
         }
 
-        private DataBaseWrapper dataBase;
         private DataView archive;
 
         public DataView Archive { get => archive; set => Set(ref archive, value); }
@@ -29,10 +28,6 @@ namespace AirTickets.ViewModel
 
         private async Task OnGetDataCommandExecuted(object parameter)
         {
-            var dataBase = await DataBaseWrapper.ConnectAsync();
-            var archive = await dataBase.GetArchiveAsync();
-            Archive = archive.DefaultView;
-            StatusMessage = "ok";
         }
 
         private bool CanGetDataCommandExecute(object parameter)
@@ -42,7 +37,6 @@ namespace AirTickets.ViewModel
 
         public void Dispose()
         {
-            dataBase.Dispose();
             Archive.Dispose();
         }
     }
