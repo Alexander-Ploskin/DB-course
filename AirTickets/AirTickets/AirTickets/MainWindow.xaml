@@ -23,6 +23,7 @@
         <mui:LinkGroup DisplayName="Edit flights base">
             <mui:LinkGroup.Links>
                 <mui:Link DisplayName="Add new flight" Source="/Pages/FlightsEditor.xaml"/>
+                <mui:Link DisplayName="Tickets" Source="/Pages/Tickets.xaml"/>
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
         <mui:LinkGroup DisplayName="Archive">

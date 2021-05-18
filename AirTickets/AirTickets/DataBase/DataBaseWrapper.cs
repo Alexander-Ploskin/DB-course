@@ -51,7 +51,14 @@ namespace DataBase
 
             departureDate = $"{year}-{month}-{day}";
 
-            await DoRequestAsync($"INSERT INTO Customers VALUES ('{id}', '{name}', '{surname}', '{patronymic}');");
+            if (patronymic == "NULL")
+            {
+                await DoRequestAsync($"INSERT INTO Customers VALUES ('{id}', '{name}', '{surname}', NULL);");
+            }
+            else
+            {
+                await DoRequestAsync($"INSERT INTO Customers VALUES ('{id}', '{name}', '{surname}', '{patronymic}');");
+            }
 
             await DoRequestAsync($"INSERT INTO Passengers VALUES ('{id}', '{flightNumber}', '{departureDate}');");
 
@@ -133,6 +140,36 @@ namespace DataBase
         {
             var tableResult = await DoRequestAsync($"SELECT * FROM Discount WHERE CUSTOMER = '{id}'");
             return int.Parse(tableResult.Rows[0].ItemArray[0].ToString());
+        }
+
+        public static async Task<DataTable> GetTickets()
+        {
+            return await DoRequestAsync($"SELECT * FROM Passengers RIGHT JOIN Flights ON Passengers.FlightNumber = Flights.FlightNumber AND Flights.DepartureDate = Passengers.DepartureDate;");
+        }
+
+        public static async Task<DataRow> GetCustomerData(string id)
+        {
+            var response = await DoRequestAsync($"SELECT * FROM Customers WHERE PassportID = '{id}';");
+            return response.Rows[0];
+        }
+
+        public static async Task<DataRow> GetFlightData(string id)
+        {
+            try
+            {
+                var response = await DoRequestAsync($"SELECT * FROM Schedule WHERE ID = '{id}';");
+                return response.Rows[0];
+            }
+            catch (Exception)
+            {
+                return null ;
+            }
+
+        }
+
+        public static async Task RemoveTicket(string id, string flightNumber, string departureDate)
+        {
+            await DoRequestAsync($"DELETE FROM Passengers WHERE Customer = '{id}' AND FlightNumber = '{flightNumber}' AND DepartureDate = '{departureDate}';");
         }
     }
 }
