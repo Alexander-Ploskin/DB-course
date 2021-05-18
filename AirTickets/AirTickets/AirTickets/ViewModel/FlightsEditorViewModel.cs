@@ -43,7 +43,6 @@ namespace AirTickets.ViewModel
 
         private async Task OnAddAirportCommandExecuted(object parameter)
         {
-            await RefreshData();
             await DataBaseWrapper.InsertAirport(NewAirportIataCode, NewAirportPlace);
             await RefreshData();
         }
@@ -77,7 +76,6 @@ namespace AirTickets.ViewModel
 
         private async Task OnAddNewPlaneCommandExecuted(object parameter)
         {
-            await RefreshData();
             await DataBaseWrapper.InsertPlane(NewPlaneID, NewPlaneProducer, NewPlaneModel);
             await RefreshData();
         }
@@ -123,21 +121,25 @@ namespace AirTickets.ViewModel
 
         public string NewFlightPlane { get; set; }
 
+        private int? newFlightTotalSeats;
+
+        public int? NewFlightTotalSeats { get => newFlightTotalSeats; set => Set(ref newFlightTotalSeats, value); }
+
         public ICommand AddNewFlightCommand { get; }
 
         private async Task OnAddNewFlightCommandExecuted(object parameter)
         {
-            await RefreshData();
             var weekdayNumber = DaysOfWeek.IndexOf(NewFlightWeekdayNumber) + 1;
             var departureTime = NewFlightDepartureTime.TimeOfDay.ToString();
             await DataBaseWrapper.InsertSchedule(NewFlightID, NewFlightDepartureAirport, NewFlightArrivalAirport, weekdayNumber,
-                departureTime, NewFlightFlightTime.ToString(), 220, NewFlightPlane, NewFlightTicketCost.Value);
-            await RefreshData();
+                departureTime, NewFlightFlightTime.ToString(), NewFlightTotalSeats.Value, NewFlightPlane, NewFlightTicketCost.Value);
         }
 
         private bool CanAddNewFlightCommandExecute(object parameter)
         {
-            return true;
+            return !string.IsNullOrEmpty(NewFlightID) && !string.IsNullOrEmpty(NewFlightArrivalAirport) && !string.IsNullOrEmpty(NewFlightDepartureAirport)
+                && NewFlightTicketCost != null && NewFlightDepartureTime != null && NewFlightFlightTime != null && !string.IsNullOrEmpty(NewFlightWeekdayNumber)
+                && !string.IsNullOrEmpty(NewFlightPlane) && NewFlightTotalSeats != null;
         }
     }
 }

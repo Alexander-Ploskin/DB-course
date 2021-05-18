@@ -118,5 +118,10 @@ namespace DataBase
         {
             await DoRequestAsync($"INSERT INTO Schedule VALUES('{id}', '{departureAirport}', '{arrivalAirport}', '{weekdayNumber}', '{departureTime}', '{flightTime}', '{totalTickets}', '{plane}', '{ticketCost}');");
         }
+
+        public static async Task UpdateSchedule(string id, string propertyName, string newValue)
+        {
+            await DoRequestAsync($"UPDATE Schedule SET {propertyName} = {newValue} WHERE ID = {id};");
+        }
     }
 }

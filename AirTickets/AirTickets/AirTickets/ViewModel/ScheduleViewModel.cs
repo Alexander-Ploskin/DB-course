@@ -9,41 +9,60 @@ using System.Linq;
 using AirTickets.Command;
 using System.Windows.Controls;
 using DataBase;
+using System.Collections.ObjectModel;
 
 namespace AirTickets.ViewModel
 {
     public class ScheduleViewModel : BaseViewModel, IDisposable
     {
-        public ScheduleViewModel()
+        private async Task RefreshData()
         {
             currentMin = DateTime.Now;
-            Task.Run(() => FillSchedule(currentMin));
-            GetDataCommand = new RelayAsyncCommand(OnGetDataCommandExecuted, (ex) => Message = ex.Message, CanGetDataCommandExecute);
-            MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => Message = ex.Message, CanMoveRightCommandExecute);
-            MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => Message = ex.Message, CanMoveLeftCommandExecute);
-            BuyTicketCommand = new RelayAsyncCommand(OnBuyTicketCommandExecuted, (ex) => Message = ex.Message, CanBuyTicketCommandExecute);
+            await FillSchedule(currentMin);
+
+            var airports = await DataBaseWrapper.GetAirports();
+            ExistingAirports = new ObservableCollection<string>();
+            foreach (var airport in airports)
+            {
+                var airportData = (DataRow)airport;
+                ExistingAirports.Add(airportData.ItemArray[0].ToString());
+            }
+
+            var planes = await DataBaseWrapper.GetPlanes();
+            ExistingPlanes = new ObservableCollection<string>();
+            foreach (var plane in planes)
+            {
+                var planeData = (DataRow)plane;
+                ExistingPlanes.Add(planeData.ItemArray[0].ToString());
+            }
+        }
+
+        public ScheduleViewModel()
+        {
+            Task.Run(() => RefreshData());
+            MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => { throw ex; }, CanMoveRightCommandExecute);
+            MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => { throw ex; }, CanMoveLeftCommandExecute);
+            BuyTicketCommand = new RelayAsyncCommand(OnBuyTicketCommandExecuted, (ex) => { throw ex; }, CanBuyTicketCommandExecute);
         }
 
         public ICommand BuyTicketCommand { get; }
 
         private async Task OnBuyTicketCommandExecuted(object parameter)
         {
-            await DataBaseWrapper.InsertFlight(selectedFlightNumber, selectedFlightDepartureDate);
+            await DataBaseWrapper.InsertFlight(NewFlightID, selectedFlightDepartureDate);
             await DataBaseWrapper.InsertPassenger(SelectedName, SelectedSurname, SelectedPatronymic,
-                SelectedID, selectedFlightNumber, selectedFlightDepartureDate);
+                SelectedID, NewFlightID, selectedFlightDepartureDate);
             await FillSchedule(currentMin);
         }
 
         private bool CanBuyTicketCommandExecute(object parameter)
         {
-            return !string.IsNullOrEmpty(selectedFlightNumber)
+            return !string.IsNullOrEmpty(NewFlightID)
                 && !string.IsNullOrEmpty(selectedFlightDepartureDate)
                 && !string.IsNullOrEmpty(SelectedName)
                 && !string.IsNullOrEmpty(SelectedSurname)
                 && !string.IsNullOrEmpty(SelectedID);
         }
-
-        private string selectedFlightNumber;
 
         private string selectedFlightDepartureDate;
 
@@ -70,9 +89,24 @@ namespace AirTickets.ViewModel
         public void FlightSelected (object sender, SelectionChangedEventArgs args)
         {
             var dataRow = (DataRowView)args.AddedItems[0];
-            selectedFlightNumber = dataRow.Row.ItemArray[0].ToString();
+            var row = dataRow.Row;
+            var index = 0;
+            while (!fullData.Table.Rows[index].ItemArray[0].Equals(row.ItemArray[0]))
+            {
+                index++;
+            }
+            var dataRow2 = fullData.Table.Rows[index];
+            NewFlightID = dataRow2.ItemArray[0].ToString();
+            NewFlightDepartureAirport = dataRow2.ItemArray[1].ToString();
+            NewFlightArrivalAirport = dataRow2.ItemArray[2].ToString();
+            NewFlightWeekdayNumber = ((DayOfWeek)((int)dataRow2.ItemArray[3])).ToString();
+            NewFlightDepartureTime = DateTime.Parse(dataRow2.ItemArray[4].ToString());
+            NewFlightFlightTime = TimeSpan.Parse(dataRow2.ItemArray[5].ToString());
+            NewFlightPlane = dataRow2.ItemArray[7].ToString();
+            var cost = dataRow2.ItemArray[8].ToString().Split(",")[0];
+            NewFlightTicketCost = int.Parse(cost);
+
             selectedFlightDepartureDate = dataRow.Row.ItemArray[3].ToString();
-            SelectedFlight = selectedFlightNumber;
             return;
         }
 
@@ -100,6 +134,7 @@ namespace AirTickets.ViewModel
             {
                 return;
             }
+
             pageNumber--;
             currentMin = currentMin.AddDays(-7);
 
@@ -108,9 +143,6 @@ namespace AirTickets.ViewModel
 
         private bool CanMoveLeftCommandExecute(object p) => pageNumber > 0;
 
-        private bool connected;
-        private bool Connected { get => connected; set => Set(ref connected, value); }
-
         private DataView schedule;
 
         public DataView VisibleSchedule { get => schedule; set => Set(ref schedule, value); }
@@ -118,12 +150,6 @@ namespace AirTickets.ViewModel
         private DataView selectedFlightData;
 
         public DataView SelectedFlightData { get => selectedFlightData; set => Set(ref selectedFlightData, value); }
-
-        private string message = "";
-
-        public string Message { get => message; set => Set(ref message, value); }
-
-        public ICommand GetDataCommand { get; }
 
         private string GetNearestDate(DayOfWeek dayOfWeek, DateTime minimum)
         {
@@ -134,6 +160,8 @@ namespace AirTickets.ViewModel
             }
             return day.ToString("dd/MM/yyyy");
         }
+
+        private DataView fullData;
 
         private async Task FillSchedule(DateTime minimum)
         {
@@ -153,6 +181,7 @@ namespace AirTickets.ViewModel
                 row["Departure date"] = GetNearestDate(dayOfWeek, localMinimum);
                 row["Free seats"] = await DataBaseWrapper.GetFreeTickets(row["id"].ToString(), row["Departure date"].ToString());
             }
+            fullData = (await DataBaseWrapper.GetScheduleAsync()).DefaultView;
             schedule.Columns.Remove("weekdaynumber");
             schedule.Columns.Remove("plane");
             schedule.Columns.Remove("totaltickets");
@@ -165,20 +194,54 @@ namespace AirTickets.ViewModel
             schedule.Columns["Departure date"].SetOrdinal(3);
 
             VisibleSchedule = schedule.DefaultView;
-            VisibleSchedule.Sort = "Departure date asc, Departure time asc";
-            Message = "ok";
+            try
+            {
+                VisibleSchedule.Sort = "Departure date asc, Departure time asc";
+            }
+            catch (Exception) { }
         }
 
-        private async Task OnGetDataCommandExecuted(object parameter)
-        {
-            currentMin = DateTime.Now;
-            await FillSchedule(DateTime.Now);
-        }
+        private string newFlightID;
 
-        private bool CanGetDataCommandExecute(object parameter)
-        {
-            return true;
-        }
+        public string NewFlightID { get => newFlightID; set => Set(ref newFlightID, value); }
+
+        private string newFlightArrivalAirport;
+
+        public string NewFlightArrivalAirport { get => newFlightArrivalAirport; set => Set(ref newFlightArrivalAirport, value); }
+
+        private string newFlightDepartureAirport;
+
+        public string NewFlightDepartureAirport { get => newFlightDepartureAirport; set => Set(ref newFlightDepartureAirport, value); }
+
+        private int? newFlightTicketCost;
+
+        public int? NewFlightTicketCost { get => newFlightTicketCost; set => Set(ref newFlightTicketCost, value); }
+
+        private DateTime newFlightDepartureTime;
+
+        public DateTime NewFlightDepartureTime { get => newFlightDepartureTime; set => Set(ref newFlightDepartureTime, value); }
+
+        private TimeSpan? newFlightFlightTime;
+
+        public TimeSpan? NewFlightFlightTime { get => newFlightFlightTime; set => Set(ref newFlightFlightTime, value); }
+
+        public ObservableCollection<string> DaysOfWeek { get; } = new ObservableCollection<string>() { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+        private string newFlightWeekdayNumber;
+
+        public string NewFlightWeekdayNumber { get => newFlightWeekdayNumber; set => Set(ref newFlightWeekdayNumber, value); }
+
+        private ObservableCollection<string> existingAirports;
+
+        public ObservableCollection<string> ExistingAirports { get => existingAirports; set => Set(ref existingAirports, value); }
+
+        private ObservableCollection<string> existingPlanes;
+
+        public ObservableCollection<string> ExistingPlanes { get => existingPlanes; set => Set(ref existingPlanes, value); }
+
+        private string newFlightPlane;
+
+        public string NewFlightPlane { get => newFlightPlane; set => Set(ref newFlightPlane, value); }
 
         public void Dispose()
         {
