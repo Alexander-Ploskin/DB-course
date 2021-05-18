@@ -123,5 +123,10 @@ namespace DataBase
         {
             await DoRequestAsync($"UPDATE Schedule SET {propertyName} = '{newValue}' WHERE ID = '{id}';");
         }
+
+        public static async Task  RemoveFlight(string id)
+        {
+            await DoRequestAsync($"DELETE FROM Schedule WHERE ID = '{id}';");
+        }
     }
 }

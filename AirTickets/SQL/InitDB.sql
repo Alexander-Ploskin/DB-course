@@ -5,14 +5,14 @@ CREATE TABLE Producers(
 );
 
 CREATE TABLE Models(
-    Producer CHAR(20) REFERENCES Producers(Name) NOT NULL,
+    Producer CHAR(20) REFERENCES Producers(Name) ON DELETE CASCADE,
     Name CHAR(20) NOT NULL,
     FullName CHAR(41) GENERATED ALWAYS AS (Producer || ' ' || Name) STORED PRIMARY KEY
 );
 
 CREATE TABLE Planes(
     Id CHAR(7) PRIMARY KEY,
-    Model CHAR(41) REFERENCES Models(FullName)
+    Model CHAR(41) REFERENCES Models(FullName) NOT NULL ON DELETE NO ACTION
 );
 
 CREATE TABLE Customers(
@@ -28,23 +28,23 @@ CREATE TABLE Places(
 
 CREATE TABLE Airports(
     IATACode CHAR(3) PRIMARY KEY,
-    Place CHAR(20) REFERENCES Places(Name) NOT NULL
+    Place CHAR(20) REFERENCES Places(Name) NOT NULL ON DELETE NO ACTION
 );
 
 CREATE TABLE Schedule(
     ID CHAR(6) PRIMARY KEY,
-    DepartureAirport CHAR(3) REFERENCES Airports(IATACode) NOT NULL,
-	ArrivalAirport CHAR(3) REFERENCES Airports(IATACode) NOT NULL,
+    DepartureAirport CHAR(3) REFERENCES Airports(IATACode) NOT NULL ON DELETE NO ACTION,
+	ArrivalAirport CHAR(3) REFERENCES Airports(IATACode) NOT NULL ON DELETE NO ACTION,
 	WeekdayNumber INT CHECK(WeekdayNumber >= 1 AND WeekdayNumber <= 7) NOT NULL,
 	DepartureTime TIME NOT NULL,
     FlightTime INTERVAL NOT NULL,
 	TotalTickets INT CHECK (TotalTickets >= 0) NOT NULL,
-	Plane CHAR(7) REFERENCES Planes(Id) NOT NULL,
+	Plane CHAR(7) REFERENCES Planes(Id) NOT NULL ON DELETE NO ACTION,
     TicketCost MONEY NOT NULL
 );
 
 CREATE TABLE Flights(
-	FlightNumber CHAR(6) REFERENCES Schedule(ID) NOT NULL,
+	FlightNumber CHAR(6) REFERENCES Schedule(ID) NOT NULL ON DELETE CASCADE,
 	SoldTickets INT CHECK (SoldTickets >= 0) NOT NULL,
 	DepartureDate DATE NOT NULL,
 	PRIMARY KEY (FlightNumber, DepartureDate)
@@ -77,8 +77,8 @@ ALTER TABLE Flights
 ADD CONSTRAINT WeekdayNumber CHECK(CheckDayOfWeek(FlightNumber, DepartureDate));
 
 CREATE TABLE Archive(
-	FlightNumber CHAR(6) REFERENCES Schedule(ID),
-	Plane CHAR(7) REFERENCES Planes(Id),
+	FlightNumber CHAR(6) REFERENCES Schedule(ID) ON DELETE CASCADE,
+	Plane CHAR(7) REFERENCES Planes(Id) ON DELETE NO ACTION,
 	TotalTickets INT CHECK (TotalTickets >= 0) NOT NULL,
 	SoldTickets INT CHECK (SoldTickets BETWEEN 0 AND TotalTickets) NOT NULL,
 	DepartureDate DATE CHECK (DepartureDate < NOW()) NOT NULL,
@@ -101,8 +101,8 @@ END;
 $$;
 
 CREATE TABLE Passengers(
-	Customer CHAR(20) REFERENCES Customers(PassportId) NOT NULL,
-	FlightNumber CHAR(6) REFERENCES Schedule(ID) NOT NULL,
+	Customer CHAR(20) REFERENCES Customers(PassportId) NOT NULL ON DELETE CASCADE,
+	FlightNumber CHAR(6) REFERENCES Schedule(ID) NOT NULL ON DELETE CASCADE,
 	DepartureDate DATE NOT NULL,
 	PRIMARY KEY (FlightNumber, DepartureDate, Customer)
 );

@@ -74,6 +74,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="Update flight data" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" HorizontalAlignment="Center"/>
                 <TextBlock Text="ID:" Grid.Column="0" Grid.Row="1"/>
@@ -92,7 +93,8 @@
                 <ComboBox Grid.Column="3" Grid.Row="3" ItemsSource="{Binding ExistingAirports}" SelectedValue="{Binding NewFlightDepartureAirport, Mode=TwoWay}"/>
                 <TextBlock Text="Arrival airport:" Grid.Column="2" Grid.Row="4"/>
                 <ComboBox Grid.Column="3" Grid.Row="4" ItemsSource="{Binding ExistingAirports}" SelectedValue="{Binding NewFlightArrivalAirport, Mode=TwoWay}"/>
-                <Button Grid.Column="0" Grid.ColumnSpan="4" Content="Updade flight data" Grid.Row="5" Command="{Binding UpdateFlightDataCommand}"/>
+                <Button Grid.Column="0" Grid.ColumnSpan="4" Content="Remove flight" Grid.Row="5" Command="{Binding RemoveFlightCommand}"/>
+                <Button Grid.Column="0" Grid.ColumnSpan="4" Content="Updade flight data" Grid.Row="6" Command="{Binding UpdateFlightDataCommand}"/>
             </Grid>
         </Border>
     </Grid>

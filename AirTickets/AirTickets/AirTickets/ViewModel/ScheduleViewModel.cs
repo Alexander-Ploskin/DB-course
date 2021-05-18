@@ -43,12 +43,27 @@ namespace AirTickets.ViewModel
             MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => { throw ex; }, CanMoveRightCommandExecute);
             MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => { throw ex; }, CanMoveLeftCommandExecute);
             BuyTicketCommand = new RelayAsyncCommand(OnBuyTicketCommandExecuted, (ex) => { throw ex; }, CanBuyTicketCommandExecute);
-            UpdateFlightDataCommand = new RelayAsyncCommand(OnUpdateFlightDataCommandExecued, (ex) => { throw ex; }, CanUpdateFlightDataCommandExecute);
+            UpdateFlightDataCommand = new RelayAsyncCommand(OnUpdateFlightDataCommandExecuted, (ex) => { throw ex; }, CanUpdateFlightDataCommandExecute);
+            RemoveFlightCommand = new RelayAsyncCommand(OnRemoveFlightCommandExecuted, (ex) => { throw ex; }, CanRemoveFlightCommandExecute);
+        }
+
+        public ICommand RemoveFlightCommand { get; }
+
+        private async Task OnRemoveFlightCommandExecuted(object parameter)
+        {
+            await DataBaseWrapper.RemoveFlight(NewFlightID);
+
+            await RefreshData();
+        }
+
+        private bool CanRemoveFlightCommandExecute(object parameter)
+        {
+            return !string.IsNullOrEmpty(NewFlightID);
         }
 
         public ICommand UpdateFlightDataCommand { get; }
 
-        private async Task OnUpdateFlightDataCommandExecued(object parameter)
+        private async Task OnUpdateFlightDataCommandExecuted(object parameter)
         {
             var weekdayNumber = DaysOfWeek.IndexOf(NewFlightWeekdayNumber) + 1;
 
