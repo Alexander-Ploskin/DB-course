@@ -124,9 +124,15 @@ namespace DataBase
             await DoRequestAsync($"UPDATE Schedule SET {propertyName} = '{newValue}' WHERE ID = '{id}';");
         }
 
-        public static async Task  RemoveFlight(string id)
+        public static async Task RemoveFlight(string id)
         {
             await DoRequestAsync($"DELETE FROM Schedule WHERE ID = '{id}';");
+        }
+
+        public static async Task<int> GetDiscount(string id)
+        {
+            var tableResult = await DoRequestAsync($"SELECT * FROM Discount WHERE CUSTOMER = '{id}'");
+            return int.Parse(tableResult.Rows[0].ItemArray[0].ToString());
         }
     }
 }

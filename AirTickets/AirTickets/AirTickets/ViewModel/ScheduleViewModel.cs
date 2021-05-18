@@ -17,24 +17,29 @@ namespace AirTickets.ViewModel
     {
         private async Task RefreshData()
         {
-            currentMin = DateTime.Now;
-            await FillSchedule(currentMin);
-
-            var airports = await DataBaseWrapper.GetAirports();
-            ExistingAirports = new ObservableCollection<string>();
-            foreach (var airport in airports)
+            try
             {
-                var airportData = (DataRow)airport;
-                ExistingAirports.Add(airportData.ItemArray[0].ToString());
-            }
+                currentMin = DateTime.Now;
+                await FillSchedule(currentMin);
 
-            var planes = await DataBaseWrapper.GetPlanes();
-            ExistingPlanes = new ObservableCollection<string>();
-            foreach (var plane in planes)
-            {
-                var planeData = (DataRow)plane;
-                ExistingPlanes.Add(planeData.ItemArray[0].ToString());
+                var airports = await DataBaseWrapper.GetAirports();
+                ExistingAirports = new ObservableCollection<string>();
+                foreach (var airport in airports)
+                {
+                    var airportData = (DataRow)airport;
+                    ExistingAirports.Add(airportData.ItemArray[0].ToString());
+                }
+
+                var planes = await DataBaseWrapper.GetPlanes();
+                ExistingPlanes = new ObservableCollection<string>();
+                foreach (var plane in planes)
+                {
+                    var planeData = (DataRow)plane;
+                    ExistingPlanes.Add(planeData.ItemArray[0].ToString());
+                }
             }
+            catch (Exception)
+            { }
         }
 
         public ScheduleViewModel()
@@ -53,6 +58,7 @@ namespace AirTickets.ViewModel
         {
             await DataBaseWrapper.RemoveFlight(NewFlightID);
 
+            NewFlightID = null;
             await RefreshData();
         }
 
@@ -92,7 +98,7 @@ namespace AirTickets.ViewModel
             await DataBaseWrapper.InsertFlight(NewFlightID, selectedFlightDepartureDate);
             await DataBaseWrapper.InsertPassenger(SelectedName, SelectedSurname, SelectedPatronymic,
                 SelectedID, NewFlightID, selectedFlightDepartureDate);
-            await FillSchedule(currentMin);
+            await RefreshData();
         }
 
         private bool CanBuyTicketCommandExecute(object parameter)
@@ -105,6 +111,18 @@ namespace AirTickets.ViewModel
         }
 
         private string selectedFlightDepartureDate;
+
+        private int discount;
+
+        public int Discount { get => discount; set => Set(ref discount, value); }
+
+        public string DiscountString { get => $"- {Discount}%"; }
+
+        public int finalPrice;
+
+        public int FinalPrice { get => finalPrice; set => Set(ref finalPrice, value); }
+
+        public string FinalPriceString { get => $"Final price: {FinalPrice}"; }
 
         private string selectedName;
 
@@ -126,28 +144,42 @@ namespace AirTickets.ViewModel
 
         public string SelectedFlight { get => selectedFlight; set => Set(ref selectedFlight, value); }
 
-        public void FlightSelected (object sender, SelectionChangedEventArgs args)
+        public async void FlightSelected (object sender, SelectionChangedEventArgs args)
         {
-            var dataRow = (DataRowView)args.AddedItems[0];
-            var row = dataRow.Row;
-            var index = 0;
-            while (!fullData.Table.Rows[index].ItemArray[0].Equals(row.ItemArray[0]))
+            try
             {
-                index++;
-            }
-            var dataRow2 = fullData.Table.Rows[index];
-            NewFlightID = dataRow2.ItemArray[0].ToString();
-            NewFlightDepartureAirport = dataRow2.ItemArray[1].ToString();
-            NewFlightArrivalAirport = dataRow2.ItemArray[2].ToString();
-            NewFlightWeekdayNumber = ((DayOfWeek)((int)dataRow2.ItemArray[3])).ToString();
-            NewFlightDepartureTime = DateTime.Parse(dataRow2.ItemArray[4].ToString());
-            NewFlightFlightTime = TimeSpan.Parse(dataRow2.ItemArray[5].ToString());
-            NewFlightPlane = dataRow2.ItemArray[7].ToString();
-            var cost = dataRow2.ItemArray[8].ToString().Split(",")[0];
-            NewFlightTicketCost = int.Parse(cost);
+                var dataRow = (DataRowView)args.AddedItems[0];
+                var row = dataRow.Row;
+                var index = 0;
+                while (!fullData.Table.Rows[index].ItemArray[0].Equals(row.ItemArray[0]))
+                {
+                    index++;
+                }
+                var dataRow2 = fullData.Table.Rows[index];
+                NewFlightID = dataRow2.ItemArray[0].ToString();
+                NewFlightDepartureAirport = dataRow2.ItemArray[1].ToString();
+                NewFlightArrivalAirport = dataRow2.ItemArray[2].ToString();
+                NewFlightWeekdayNumber = ((DayOfWeek)((int)dataRow2.ItemArray[3])).ToString();
+                NewFlightDepartureTime = DateTime.Parse(dataRow2.ItemArray[4].ToString());
+                NewFlightFlightTime = TimeSpan.Parse(dataRow2.ItemArray[5].ToString());
+                NewFlightPlane = dataRow2.ItemArray[7].ToString();
+                var cost = dataRow2.ItemArray[8].ToString().Split(",")[0];
+                NewFlightTicketCost = int.Parse(cost);
 
-            selectedFlightDepartureDate = dataRow.Row.ItemArray[3].ToString();
-            return;
+                selectedFlightDepartureDate = dataRow.Row.ItemArray[3].ToString();
+
+                if (!string.IsNullOrEmpty(SelectedID))
+                {
+                    Discount = await DataBaseWrapper.GetDiscount(SelectedID);
+                    OnPropertyChanged(nameof(DiscountString));
+                }
+
+                FinalPrice = NewFlightTicketCost.Value - NewFlightTicketCost.Value / 100 * Discount;
+                OnPropertyChanged(nameof(FinalPriceString));
+
+                return;
+            }
+            catch (Exception) { }
         }
 
         private int pageNumber;

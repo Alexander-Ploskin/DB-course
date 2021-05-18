@@ -45,6 +45,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="Sell ticket" FontSize="16" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0"/>
                 <TextBlock Text="{Binding NewFlightID}" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"/>
@@ -52,11 +53,25 @@
                 <TextBlock Text="Surname:" Grid.Column="0" Grid.Row="3"/>
                 <TextBlock Text="Patronymic:" Grid.Column="0" Grid.Row="4"/>
                 <TextBlock Text="ID:" Grid.Column="0" Grid.Row="5"/>
-                <TextBox Text="{Binding SelectedName}" Grid.Column="1" Grid.Row="2"/>
-                <TextBox Text="{Binding SelectedSurname}" Grid.Column="1" Grid.Row="3"/>
-                <TextBox Text="{Binding SelectedPatronymic}" Grid.Column="1" Grid.Row="4"/>
-                <TextBox Text="{Binding SelectedID}" Grid.Column="1" Grid.Row="5"/>
-                <Button Content="Buy" Command="{Binding BuyTicketCommand}" Grid.ColumnSpan="2" Grid.Row="6"/>
+                <TextBox Text="{Binding SelectedName, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Grid.Row="2"/>
+                <TextBox Text="{Binding SelectedSurname, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Grid.Row="3"/>
+                <TextBox Text="{Binding SelectedPatronymic, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Grid.Row="4"/>
+                <TextBox Text="{Binding SelectedID, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Grid.Row="5"/>
+                <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Price:" Grid.Column="0" Grid.Row="0"/>
+                    <TextBlock Text="{Binding NewFlightTicketCost}" TextDecorations="Strikethrough" Grid.Column="0" Grid.Row="1"/>
+                    <TextBlock Text="{Binding DiscountString}" Grid.Column="1" Grid.Row="0"/>
+                    <TextBlock Text="{Binding FinalPriceString}" Grid.Column="1" Grid.Row="1"/>
+                </Grid>
+                <Button Content="Buy" Command="{Binding BuyTicketCommand}" Grid.ColumnSpan="2" Grid.Row="7"/>
             </Grid>
         </Border>
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="10" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ItemBorder}">
