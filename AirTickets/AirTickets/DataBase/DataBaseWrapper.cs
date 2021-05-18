@@ -144,7 +144,7 @@ namespace DataBase
 
         public static async Task<DataTable> GetTickets()
         {
-            return await DoRequestAsync($"SELECT * FROM Passengers RIGHT JOIN Flights ON Passengers.FlightNumber = Flights.FlightNumber AND Flights.DepartureDate = Passengers.DepartureDate;");
+            return await DoRequestAsync($"SELECT * FROM Passengers INNER JOIN Flights ON Passengers.FlightNumber = Flights.FlightNumber AND Flights.DepartureDate = Passengers.DepartureDate; ");
         }
 
         public static async Task<DataRow> GetCustomerData(string id)
