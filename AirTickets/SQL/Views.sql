@@ -9,7 +9,7 @@ FROM Passengers, (SELECT Customer, (COUNT(*)) AS Flights
 WHERE Passengers.Customer = A.Customer;
 
 --Returns table which contains average occupancy for every month of last year
-CREATE OR REPLACE FUNCTION GetAverageOccupancy(AirportA CHAR(20), AirportB CHAR(20))
+CREATE OR REPLACE FUNCTION GetAverageOccupancy(AirportA CHAR(3), AirportB CHAR(3))
 RETURNS TABLE (
 	AverageOccupancy FLOAT,
 	MonthNumber TEXT
@@ -17,11 +17,11 @@ RETURNS TABLE (
 LANGUAGE plpgsql AS
 $$
 BEGIN
-RETURN QUERY (WITH occupancy_table AS 
-	(SELECT CAST(Archive.SoldTickets AS float) / archive.TotalTickets AS occupancy, to_char(DepartureDate, 'MM') AS flight_month 
-	FROM archive NATURAL JOIN schedule 
-	WHERE (schedule.DepartureAirport = AirportA) and (schedule.ArrivalAirport = AirPortB))
-SELECT AVG(occupancy), flight_month FROM occupancy_table GROUP BY flight_month);
+RETURN QUERY WITH OccupancyTable AS 
+	(SELECT (CAST(Archive.SoldTickets AS float) / Archive.TotalTickets) AS Occupancy, to_char(DepartureDate, 'MM') AS FlightMonth 
+	FROM Archive LEFT JOIN Schedule ON FlightNumber = ID
+	WHERE (Schedule.DepartureAirport = AirportA) and (Schedule.ArrivalAirport = AirPortB))
+SELECT AVG(Occupancy) AS AverAgeOccupancy, FlightMonth FROM OccupancyTable GROUP BY FlightMonth;
 END;
 $$;
 
@@ -83,7 +83,6 @@ $$;
 CREATE OR REPLACE FUNCTION GetCheapFlights(
 	StartPoint CHAR(6), 
 	FinalPoint CHAR(6),
-	FlightDate DATE,
 	MaxTransferTime INTERVAL
 ) RETURNS TABLE(
 	FirstFlight CHAR(6),
