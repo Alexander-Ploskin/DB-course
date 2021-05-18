@@ -121,7 +121,7 @@ namespace DataBase
 
         public static async Task UpdateSchedule(string id, string propertyName, string newValue)
         {
-            await DoRequestAsync($"UPDATE Schedule SET {propertyName} = {newValue} WHERE ID = {id};");
+            await DoRequestAsync($"UPDATE Schedule SET {propertyName} = '{newValue}' WHERE ID = '{id}';");
         }
     }
 }

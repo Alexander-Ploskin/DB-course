@@ -43,6 +43,31 @@ namespace AirTickets.ViewModel
             MoveRightCommand = new RelayAsyncCommand(OnMoveRightCommandExecuted, (ex) => { throw ex; }, CanMoveRightCommandExecute);
             MoveLeftCommand = new RelayAsyncCommand(OnMoveLeftCommandExecuted, (ex) => { throw ex; }, CanMoveLeftCommandExecute);
             BuyTicketCommand = new RelayAsyncCommand(OnBuyTicketCommandExecuted, (ex) => { throw ex; }, CanBuyTicketCommandExecute);
+            UpdateFlightDataCommand = new RelayAsyncCommand(OnUpdateFlightDataCommandExecued, (ex) => { throw ex; }, CanUpdateFlightDataCommandExecute);
+        }
+
+        public ICommand UpdateFlightDataCommand { get; }
+
+        private async Task OnUpdateFlightDataCommandExecued(object parameter)
+        {
+            var weekdayNumber = DaysOfWeek.IndexOf(NewFlightWeekdayNumber) + 1;
+
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "DepartureAirport", NewFlightDepartureAirport);
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "ArrivalAirport", NewFlightArrivalAirport);
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "WeekdayNumber", weekdayNumber.ToString());
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "DepartureTime", NewFlightDepartureTime.TimeOfDay.ToString());
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "FlightTime", NewFlightFlightTime.ToString());
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "Plane", NewFlightPlane);
+            await DataBaseWrapper.UpdateSchedule(NewFlightID, "TicketCost", NewFlightTicketCost.Value.ToString());
+
+            await RefreshData();
+        }
+
+        private bool CanUpdateFlightDataCommandExecute(object parameter)
+        {
+            return !string.IsNullOrEmpty(NewFlightID) && !string.IsNullOrEmpty(NewFlightArrivalAirport) && !string.IsNullOrEmpty(NewFlightDepartureAirport)
+                && NewFlightTicketCost != null && NewFlightDepartureTime != null && NewFlightFlightTime != null && !string.IsNullOrEmpty(NewFlightWeekdayNumber)
+                && !string.IsNullOrEmpty(NewFlightPlane);
         }
 
         public ICommand BuyTicketCommand { get; }
@@ -193,12 +218,20 @@ namespace AirTickets.ViewModel
             schedule.Columns["flighttime"].ColumnName = "Flight time";
             schedule.Columns["Departure date"].SetOrdinal(3);
 
-            VisibleSchedule = schedule.DefaultView;
             try
             {
+                VisibleSchedule = schedule.DefaultView;
                 VisibleSchedule.Sort = "Departure date asc, Departure time asc";
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                try
+                {
+                    VisibleSchedule.Sort = "Departure date asc, Departure time asc";
+                }
+                catch (Exception)
+                { }
+            }
         }
 
         private string newFlightID;
