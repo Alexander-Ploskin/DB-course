@@ -101,13 +101,24 @@ namespace AirTickets.ViewModel
                 Name = (string)customerData.ItemArray[1];
                 Surname = (string)customerData.ItemArray[2];
                 Patronymic = "";
-                Patronymic = (string)customerData.ItemArray[3];
+                try
+                {
+                    Patronymic = (string)customerData.ItemArray[3];
 
-                var flightData = await DataBaseWrapper.GetFlightData((string)row.ItemArray[1]);
-                flightNumber = (string)flightData.ItemArray[0];
-                Departure = (string)flightData.ItemArray[1];
-                Destination = (string)flightData.ItemArray[2];
-                Date = row["Date"].ToString();
+                    var flightData = await DataBaseWrapper.GetFlightData((string)row.ItemArray[1]);
+                    flightNumber = (string)flightData.ItemArray[0];
+                    Departure = (string)flightData.ItemArray[1];
+                    Destination = (string)flightData.ItemArray[2];
+                    Date = row["Date"].ToString();
+                }
+                catch (Exception)
+                {
+                    var flightData = await DataBaseWrapper.GetFlightData((string)row.ItemArray[1]);
+                    flightNumber = (string)flightData.ItemArray[0];
+                    Departure = (string)flightData.ItemArray[1];
+                    Destination = (string)flightData.ItemArray[2];
+                    Date = row["Date"].ToString();
+                }
             }
             catch (Exception)
             { }

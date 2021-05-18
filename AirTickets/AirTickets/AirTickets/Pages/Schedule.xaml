@@ -23,7 +23,7 @@
         <Border Grid.Column="0" Grid.Row="0" Margin="10" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource ItemBorder}">
             <StackPanel>
                 <DataGrid ItemsSource="{Binding VisibleSchedule}" IsReadOnly="True" MaxWidth="800"
-                      HorizontalAlignment="Left" x:Name="schedule"/>
+                      HorizontalAlignment="Left" x:Name="schedule" MaxHeight="350"/>
                 <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1">
                     <Button Content="&lt;" Command="{Binding MoveLeftCommand}"/>
                     <Button Content=">" Command="{Binding MoveRightCommand}"/>
